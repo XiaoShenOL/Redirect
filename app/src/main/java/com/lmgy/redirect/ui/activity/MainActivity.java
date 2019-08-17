@@ -57,17 +57,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-//        mBtnVpn.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
-//                if (isChecked) {
-//                    if (checkHost() == -1) showDialog();
-//                    else startVPN();
-//                } else {
-//                    shutdownVPN();
-//                }
-//            }
-//        });
 
         LocalBroadcastManager.getInstance(this).registerReceiver(vpnStateReceiver,
                 new IntentFilter(LocalVpnService.BROADCAST_VPN_STATE));
