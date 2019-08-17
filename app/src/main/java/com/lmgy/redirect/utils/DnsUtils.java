@@ -4,19 +4,21 @@ import android.util.Log;
 
 import com.lmgy.redirect.bean.HostData;
 import com.lmgy.redirect.net.Packet;
-import org.xbill.DNS.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import org.xbill.DNS.AAAARecord;
+import org.xbill.DNS.ARecord;
+import org.xbill.DNS.Address;
+import org.xbill.DNS.Flags;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Type;
+
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /*
  * Created by lmgy on 15/8/2019

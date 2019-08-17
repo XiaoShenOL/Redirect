@@ -19,7 +19,6 @@ import com.lmgy.redirect.bean.HostData;
 import com.lmgy.redirect.net.LocalVpnService;
 import com.lmgy.redirect.utils.SPUtils;
 
-
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -27,19 +26,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String TAG = "MainActivity";
     private static final int VPN_REQUEST_CODE = 0x0F;
 
+    private SwitchButton mBtnVpn;
+    private Button mBtnSetting;
+
     private boolean waitingForVPNStart;
     private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (LocalVpnService.BROADCAST_VPN_STATE.equals(intent.getAction())) {
-                if (intent.getBooleanExtra("running", false))
-                    waitingForVPNStart = false;
-            }
+            if (LocalVpnService.BROADCAST_VPN_STATE.equals(intent.getAction()) && intent.getBooleanExtra("running", false))
+                waitingForVPNStart = false;
         }
     };
-
-    private SwitchButton mBtnVpn;
-    private Button mBtnSetting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,18 +114,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setTitle(getString(R.string.dialog_title))
                 .setMessage(getString(R.string.dialog_message))
                 .setPositiveButton(getString(R.string.dialog_confirm), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                setButton(true);
-                startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
-            }
-        })
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        setButton(true);
+                        startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
+                    }
+                })
                 .setNegativeButton(getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                setButton(true);
-            }
-        })
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        setButton(true);
+                    }
+                })
                 .show();
     }
 

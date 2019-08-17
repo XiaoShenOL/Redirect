@@ -51,7 +51,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         initData();
     }
 
-    private void initData(){
+    private void initData() {
         adapter = new HostSettingAdapter(this, getList());
         mRv.setLayoutManager(new LinearLayoutManager(this));
         mRv.setAdapter(adapter);
@@ -106,21 +106,19 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
 
     private void multiSelect(int position) {
         HostData data = adapter.getItem(position);
-        if (data != null) {
-            if (actionMode != null) {
-                if (selectedIds.contains(String.valueOf(position)))
-                    selectedIds.remove(String.valueOf(position));
-                else
-                    selectedIds.add(String.valueOf(position));
+        if (data != null && actionMode != null) {
+            if (selectedIds.contains(String.valueOf(position)))
+                selectedIds.remove(String.valueOf(position));
+            else
+                selectedIds.add(String.valueOf(position));
 
-                if (selectedIds.size() > 0)
-                    actionMode.setTitle(String.valueOf(selectedIds.size())); //show selected item count on action mode.
-                else {
-                    actionMode.setTitle("");
-                    actionMode.finish();
-                }
-                adapter.setSelectedIds(selectedIds);
+            if (selectedIds.size() > 0)
+                actionMode.setTitle(String.valueOf(selectedIds.size())); //show selected item count on action mode.
+            else {
+                actionMode.setTitle("");
+                actionMode.finish();
             }
+            adapter.setSelectedIds(selectedIds);
         }
     }
 
