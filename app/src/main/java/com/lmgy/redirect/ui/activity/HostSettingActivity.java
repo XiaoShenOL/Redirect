@@ -4,20 +4,23 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.adapter.HostSettingAdapter;
 import com.lmgy.redirect.bean.HostData;
@@ -47,7 +50,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         initView();
         ActionBar actionBar = Objects.requireNonNull(getSupportActionBar());
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("Hosts");
+        actionBar.setTitle(getString(R.string.nav_rules));
         initData();
     }
 
@@ -83,6 +86,31 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                 multiSelect(position);
             }
         }));
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                return makeMovementFlags(0, ItemTouchHelper.START | ItemTouchHelper.END);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                List<HostData> dataList = getList();
+                dataList.remove(position);
+                SPUtils.setDataList(getApplicationContext(), "hostList", dataList);
+                adapter = new HostSettingAdapter(getApplicationContext(), getList());
+                mRv.setAdapter(adapter);
+                Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT).show();
+            }
+        });
+
+        itemTouchHelper.attachToRecyclerView(mRv);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override

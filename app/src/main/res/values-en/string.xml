@@ -4,8 +4,8 @@
     <string name="hosts_setting">hosts setting</string>
     <string name="start_vpn">start vpn</string>
     <string name="stop_vpn">stop vpn</string>
-    <string name="dialog_title">error</string>
-    <string name="dialog_message">No hosts</string>
+    <string name="dialog_title">ERROR</string>
+    <string name="dialog_message">DNS mapping rule is not set</string>
     <string name="dialog_confirm">confirm</string>
     <string name="dialog_cancel">cancel</string>
     <string name="input_correct_hostname">Please enter the correct hostname</string>
@@ -17,8 +17,16 @@
     <string name="hint_ip">IP Address</string>
     <string name="hint_hostname">Hostname</string>
     <string name="hint_remark">Remark</string>
+    <string name="action_edit">Edit</string>
     <string name="btn_save">Save</string>
     <string name="action_add">Add</string>
     <string name="action_toggle">Toggle</string>
     <string name="action_delete">Delete</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_version">Version:</string>
+    <string name="nav_github">GitHub</string>
+    <string name="nav_about">About</string>
+    <string name="nav_rules">Rules</string>
 </resources>

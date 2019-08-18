@@ -5,7 +5,7 @@
     <string name="start_vpn">開啟vpn</string>
     <string name="stop_vpn">停止vpn</string>
     <string name="dialog_title">錯誤</string>
-    <string name="dialog_message">未設置hosts</string>
+    <string name="dialog_message">未設置DNS映射規則</string>
     <string name="dialog_confirm">確定</string>
     <string name="dialog_cancel">取消</string>
     <string name="input_correct_hostname">請輸入正確的hostname</string>
@@ -17,8 +17,16 @@
     <string name="hint_ip">IP地址</string>
     <string name="hint_hostname">Hostname</string>
     <string name="hint_remark">備註</string>
+    <string name="action_edit">編輯</string>
     <string name="btn_save">保存</string>
     <string name="action_add">添加</string>
     <string name="action_toggle">轉換</string>
     <string name="action_delete">刪除</string>
+    <string name="navigation_drawer_open">開啟導航欄</string>
+    <string name="navigation_drawer_close">關閉導航欄</string>
+    <string name="nav_home">主頁</string>
+    <string name="nav_version">版本:</string>
+    <string name="nav_github">GitHub</string>
+    <string name="nav_about">關於</string>
+    <string name="nav_rules">規則</string>
 </resources>

@@ -29,7 +29,7 @@ public class DnsUtils {
     private static ConcurrentHashMap<String, String> DOMAINS_IP_MAPS6 = null;
 
 
-    public static ByteBuffer handle_dns_packet(Packet packet) {
+    public static ByteBuffer handleDnsPacket(Packet packet) {
         if (DOMAINS_IP_MAPS4 == null) {
             Log.d(TAG, "DOMAINS_IP_MAPS IS　NULL　HOST FILE ERROR");
             return null;
@@ -94,7 +94,7 @@ public class DnsUtils {
 
     }
 
-    public static int handle_hosts(List<HostData> savedHostDataList) {
+    public static int handleHosts(List<HostData> savedHostDataList) {
         try {
             Iterator<HostData> savedHostDataIterator = savedHostDataList.iterator();
             HostData savedHostData;

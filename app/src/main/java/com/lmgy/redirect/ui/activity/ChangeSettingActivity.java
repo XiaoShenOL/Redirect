@@ -2,15 +2,16 @@ package com.lmgy.redirect.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatEditText;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatEditText;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.HostData;
 import com.lmgy.redirect.utils.SPUtils;
@@ -50,7 +51,7 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
         initView();
         ActionBar actionBar = Objects.requireNonNull(getSupportActionBar());
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("Edit");
+        actionBar.setTitle(getString(R.string.action_edit));
         hostData = (HostData) getIntent().getSerializableExtra("hostData");
         mId = getIntent().getIntExtra("id", -1);
         if (hostData != null) {

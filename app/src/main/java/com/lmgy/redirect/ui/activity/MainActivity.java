@@ -5,15 +5,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
+import android.view.MenuItem;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.android.material.navigation.NavigationView;
 import com.kyleduo.switchbutton.SwitchButton;
+import com.lmgy.redirect.BuildConfig;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.HostData;
 import com.lmgy.redirect.net.LocalVpnService;
@@ -21,13 +29,16 @@ import com.lmgy.redirect.utils.SPUtils;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
     private static final int VPN_REQUEST_CODE = 0x0F;
 
+    private Toolbar mToolbar;
     private SwitchButton mBtnVpn;
-    private Button mBtnSetting;
+    private NavigationView mNavView;
+    private DrawerLayout mDrawerLayout;
 
     private boolean waitingForVPNStart;
     private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
@@ -43,6 +54,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
+
+        setSupportActionBar(mToolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        mNavView.setNavigationItemSelectedListener(this);
+        ((TextView) mNavView.getHeaderView(0).findViewById(R.id.tv_nav_version)).setText(getString(R.string.nav_version) + " " + BuildConfig.VERSION_NAME);
+
         mBtnVpn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -64,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         setButton(!waitingForVPNStart && !LocalVpnService.isRunning());
     }
+
 
     private void startVPN() {
         waitingForVPNStart = false;
@@ -97,15 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setButton(boolean enable) {
-        if (enable) {
-            mBtnVpn.setChecked(false);
-            mBtnSetting.setAlpha(1.0f);
-            mBtnSetting.setClickable(true);
-        } else {
-            mBtnVpn.setChecked(true);
-            mBtnSetting.setAlpha(.5f);
-            mBtnSetting.setClickable(false);
-        }
+        mBtnVpn.setChecked(!enable);
     }
 
     private void showDialog() {
@@ -129,20 +142,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .show();
     }
 
-    private void initView() {
-        mBtnVpn = (SwitchButton) findViewById(R.id.btn_vpn);
-        mBtnSetting = (Button) findViewById(R.id.btn_setting);
-        mBtnSetting.setOnClickListener(this);
-    }
-
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            default:
-                break;
-            case R.id.btn_setting:
-                startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
-                break;
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
     }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.nav_rules) {
+            startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
+        } else if (id == R.id.nav_about) {
+            startActivity(new Intent(getApplicationContext(), AboutActivity.class));
+        } else if (id == R.id.nav_github) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/lmgy/Redirect"))
+                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void initView() {
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mBtnVpn = (SwitchButton) findViewById(R.id.btn_vpn);
+        mNavView = (NavigationView) findViewById(R.id.nav_view);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+    }
+
 }

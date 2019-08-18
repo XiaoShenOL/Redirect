@@ -13,8 +13,9 @@ import android.net.VpnService;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.HostData;
@@ -60,8 +61,6 @@ public class LocalVpnService extends VpnService {
     private static Thread threadHandleHosts = null;
     private ParcelFileDescriptor vpnInterface = null;
 
-    private PendingIntent pendingIntent;
-
     private ConcurrentLinkedQueue<Packet> deviceToNetworkUDPQueue;
     private ConcurrentLinkedQueue<Packet> deviceToNetworkTCPQueue;
     private ConcurrentLinkedQueue<ByteBuffer> networkToDeviceQueue;
@@ -80,12 +79,12 @@ public class LocalVpnService extends VpnService {
         if (isOAndBoot) {
             //android 8.0 boot
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel channel = new NotificationChannel("vhosts_channel_id", "System", NotificationManager.IMPORTANCE_NONE);
+                NotificationChannel channel = new NotificationChannel("redirect_channel_id", "System", NotificationManager.IMPORTANCE_NONE);
                 NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 manager.createNotificationChannel(channel);
-                Notification notification = new Notification.Builder(this, "vhosts_channel_id")
+                Notification notification = new Notification.Builder(this, "redirect_channel_id")
                         .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentTitle("Virtual Hosts Running")
+                        .setContentTitle("Redirect Running")
                         .build();
                 startForeground(1, notification);
             }
@@ -128,7 +127,7 @@ public class LocalVpnService extends VpnService {
             new Thread(){
                 @Override
                 public void run() {
-                    DnsUtils.handle_hosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostData.class));
+                    DnsUtils.handleHosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostData.class));
                 }
             }.start();
         } catch (Exception e) {
@@ -158,12 +157,11 @@ public class LocalVpnService extends VpnService {
                     }
                 }
             }
-            vpnInterface = builder.setSession(getString(R.string.app_name)).setConfigureIntent(pendingIntent).establish();
+            vpnInterface = builder.setSession(getString(R.string.app_name)).setConfigureIntent(null).establish();
         }
     }
 
     private void registerNetReceiver() {
-        //wifi 4G state
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
