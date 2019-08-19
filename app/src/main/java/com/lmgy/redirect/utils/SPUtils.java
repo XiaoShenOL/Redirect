@@ -256,7 +256,6 @@ public class SPUtils {
 
         SharedPreferences sp = context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
         Gson gson = new Gson();
-        //转换成json数据，再保存
         String strJson = gson.toJson(dataList);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(key, strJson);
@@ -280,14 +279,6 @@ public class SPUtils {
         }
 
         Gson gson = new Gson();
-
-        //使用泛型解析数据会出错，返回的数据类型是LinkedTreeMap
-//        dataList = gson.fromJson(strJson, new TypeToken<List<T>>() {
-//        }.getType());
-
-        //这样写，太死
-//        dataList = gson.fromJson(strJson, new TypeToken<List<UserModel>>() {
-//        }.getType());
 
         JsonArray arry = new JsonParser().parse(strJson).getAsJsonArray();
         for (JsonElement jsonElement : arry) {

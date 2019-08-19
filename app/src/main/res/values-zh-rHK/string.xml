@@ -29,4 +29,5 @@
     <string name="nav_github">GitHub</string>
     <string name="nav_about">關於</string>
     <string name="nav_rules">規則</string>
+    <string name="tv_empty">還沒添加任何規則</string>
 </resources>

@@ -4,11 +4,13 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,6 +44,10 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
     private CoordinatorLayout mCoordinatorLayout;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRv;
+    /**
+     * tv_empty
+     */
+    private TextView mTvEmpty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,7 +157,16 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
     }
 
     private List<HostData> getList() {
-        return SPUtils.getDataList(this, "hostList", HostData.class);
+        List<HostData> dataList = SPUtils.getDataList(this, "hostList", HostData.class);
+        Log.e(TAG, "getList: " + dataList.size());
+        if (dataList.size() == 0){
+            mRv.setVisibility(View.GONE);
+            mTvEmpty.setVisibility(View.VISIBLE);
+        } else {
+            mRv.setVisibility(View.VISIBLE);
+            mTvEmpty.setVisibility(View.GONE);
+        }
+        return dataList;
     }
 
     @Override
@@ -242,5 +257,6 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         mRv = (RecyclerView) findViewById(R.id.rv);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+        mTvEmpty = (TextView) findViewById(R.id.tv_empty);
     }
 }
