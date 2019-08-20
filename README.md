@@ -1,4 +1,4 @@
-## Redirect
+# Redirect
 
 [![API](https://img.shields.io/badge/API-19%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=19)
 ![GitHub release](https://img.shields.io/github/release/lmgy/Redirect)
@@ -6,21 +6,27 @@
 ![GitHub](https://img.shields.io/github/license/lmgy/Redirect)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flmgy%2FRedirect.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flmgy%2FRedirect?ref=badge_shield)
 
-Description
-------------
+For android devices, No root required, redirection is implemented through vpn, wildcard dns records are supported. Redirect helps developers customized hosts(/system/etc/hosts) file through vpn on android devices.
 
-For android devices, No root, redirection is implemented through vpn, wildcard dns records are supported. Redirect helps developers customized hosts(/system/etc/hosts) file through vpn on android devices.
+## Installation
 
-Supports
---------
+* __[Releases](https://github.com/lmgy/Redirect/releases)__ - Release signature
+
+## Supports
 
 * support wildcard DNS records.
 * IPv4 and IPv6 protocols
-* No Root
+* No root required, no ads contained
 * Many languages
+* Low power consume
 
-License
--------
+**Users must comply with local laws and regulations.**
+
+## Requirements
+
+* Minimum Android version: >= 4.4 (API 19)
+
+## License
 
 Copyright (C) 2019 by lmgy
 
