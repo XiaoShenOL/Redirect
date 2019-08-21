@@ -40,7 +40,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
     private ActionMode actionMode;
     private boolean isMultiSelect = false;
     private List<String> selectedIds = new ArrayList<>();
-    private HostSettingAdapter adapter;
+    private HostSettingAdapter mAdapter;
     private CoordinatorLayout mCoordinatorLayout;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private RecyclerView mRv;
@@ -61,9 +61,9 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
     }
 
     private void initData() {
-        adapter = new HostSettingAdapter(this, getList());
+        mAdapter = new HostSettingAdapter(this, getList());
         mRv.setLayoutManager(new LinearLayoutManager(this));
-        mRv.setAdapter(adapter);
+        mRv.setAdapter(mAdapter);
 
         mRv.addOnItemTouchListener(new RecyclerItemClickListener(this, mRv, new RecyclerItemClickListener.OnItemClickListener() {
             @Override
@@ -108,11 +108,21 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 List<HostData> dataList = getList();
+                final List<HostData> copyDataList = new ArrayList<>(dataList);
                 dataList.remove(position);
                 SPUtils.setDataList(getApplicationContext(), "hostList", dataList);
-                adapter = new HostSettingAdapter(getApplicationContext(), getList());
-                mRv.setAdapter(adapter);
-                Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT).show();
+                mAdapter = new HostSettingAdapter(getApplicationContext(), dataList);
+                mRv.setAdapter(mAdapter);
+                Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
+                        .setAction(getString(R.string.action_undo), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                SPUtils.setDataList(getApplicationContext(), "hostList", copyDataList);
+                                mAdapter = new HostSettingAdapter(getApplicationContext(), copyDataList);
+                                mRv.setAdapter(mAdapter);
+                            }
+                        })
+                        .show();
             }
         });
 
@@ -121,8 +131,8 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                adapter = new HostSettingAdapter(getApplicationContext(), getList());
-                mRv.setAdapter(adapter);
+                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
+                mRv.setAdapter(mAdapter);
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -133,33 +143,33 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 0 && resultCode == 3) {
             Snackbar.make(mCoordinatorLayout, data.getStringExtra("result"), Snackbar.LENGTH_SHORT).show();
-            adapter = new HostSettingAdapter(getApplicationContext(), getList());
-            mRv.setAdapter(adapter);
+            mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
+            mRv.setAdapter(mAdapter);
         }
     }
 
     private void multiSelect(int position) {
-        HostData data = adapter.getItem(position);
+        HostData data = mAdapter.getItem(position);
         if (data != null && actionMode != null) {
-            if (selectedIds.contains(String.valueOf(position)))
+            if (selectedIds.contains(String.valueOf(position))) {
                 selectedIds.remove(String.valueOf(position));
-            else
+            } else {
                 selectedIds.add(String.valueOf(position));
-
-            if (selectedIds.size() > 0)
+            }
+            if (selectedIds.size() > 0) {
                 actionMode.setTitle(String.valueOf(selectedIds.size())); //show selected item count on action mode.
-            else {
+            } else {
                 actionMode.setTitle("");
                 actionMode.finish();
             }
-            adapter.setSelectedIds(selectedIds);
+            mAdapter.setSelectedIds(selectedIds);
         }
     }
 
     private List<HostData> getList() {
         List<HostData> dataList = SPUtils.getDataList(this, "hostList", HostData.class);
         Log.e(TAG, "getList: " + dataList.size());
-        if (dataList.size() == 0){
+        if (dataList.size() == 0) {
             mRv.setVisibility(View.GONE);
             mTvEmpty.setVisibility(View.VISIBLE);
         } else {
@@ -203,8 +213,8 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                                     dataList.remove(Integer.parseInt(id));
                                 }
                                 SPUtils.setDataList(getApplicationContext(), "hostList", dataList);
-                                adapter = new HostSettingAdapter(getApplicationContext(), getList());
-                                mRv.setAdapter(adapter);
+                                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
+                                mRv.setAdapter(mAdapter);
                                 Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT).show();
                             }
                         })
@@ -222,8 +232,10 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                     hostData.setType(!hostData.getType());
                 }
                 SPUtils.setDataList(this, "hostList", hostDataList);
-                adapter = new HostSettingAdapter(getApplicationContext(), getList());
-                mRv.setAdapter(adapter);
+                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
+                mRv.setAdapter(mAdapter);
+                break;
+            default:
                 break;
         }
         actionMode.finish();
@@ -235,7 +247,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         actionMode = null;
         isMultiSelect = false;
         selectedIds = new ArrayList<>();
-        adapter.setSelectedIds(new ArrayList<String>());
+        mAdapter.setSelectedIds(new ArrayList<String>());
     }
 
     @Override
@@ -248,6 +260,8 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
             case R.id.action_add:
                 Intent intent = new Intent(getApplicationContext(), ChangeSettingActivity.class);
                 startActivityForResult(intent, 0);
+                break;
+            default:
                 break;
         }
         return super.onOptionsItemSelected(item);

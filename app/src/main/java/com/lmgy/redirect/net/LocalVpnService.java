@@ -41,7 +41,7 @@ public class LocalVpnService extends VpnService {
     private static final String TAG = "LocalVpnService";
     private static final String VPN_ADDRESS = "10.1.10.1";//本地代理服务器IP地址，必要，建议用A类IP地址，防止冲突
     private static final String VPN_ADDRESS6 = "fe80:49b1:7e4f:def2:e91f:95bf:fbb6:1111";
-//    private static final String VPN_ROUTE = "0.0.0.0"; // Intercept everything
+    //    private static final String VPN_ROUTE = "0.0.0.0"; // Intercept everything
 //    private static final String VPN_ROUTE6 = "::"; // Intercept everything
     private static final int VPN_ADDRESS_MASK = 32;
     private static final int VPN_ADDRESS6_MASK = 128;
@@ -87,7 +87,7 @@ public class LocalVpnService extends VpnService {
                         .build();
                 startForeground(1, notification);
             }
-            isOAndBoot=false;
+            isOAndBoot = false;
         }
         setupHostFile();
         setupVPN();
@@ -123,7 +123,7 @@ public class LocalVpnService extends VpnService {
 
     private void setupHostFile() {
         try {
-            new Thread(){
+            new Thread() {
                 @Override
                 public void run() {
                     DnsUtils.handleHosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostData.class));

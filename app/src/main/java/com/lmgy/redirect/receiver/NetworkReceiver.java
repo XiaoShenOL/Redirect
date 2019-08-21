@@ -24,25 +24,26 @@ public class NetworkReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if(!ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())){
+        if (!ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
             return;
         }
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        NetworkInfo networkInfo = null;
+        if (connectivityManager != null) networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo == null) return;
-        if (networkInfo.isAvailable()& networkInfo.isConnected()) {
-            if (networkInfo.getType()==ConnectivityManager.TYPE_WIFI) {
+        if (networkInfo.isAvailable() & networkInfo.isConnected()) {
+            if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 ipAddress = getWifiIpAddress(context);
-                Log.d(TAG, "WIFI "+ipAddress);
-            } else if (networkInfo.getType()==ConnectivityManager.TYPE_MOBILE) {
+                Log.d(TAG, "WIFI " + ipAddress);
+            } else if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
                 ipAddress = getMobileIpAddress();
-                Log.d(TAG,"MOBILE "+ipAddress);
+                Log.d(TAG, "MOBILE " + ipAddress);
             }
         }
     }
 
     private String getWifiIpAddress(Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int int_ip = wifiInfo.getIpAddress();
         return intToIp(int_ip);
@@ -68,7 +69,6 @@ public class NetworkReceiver extends BroadcastReceiver {
     }
 
     private static String intToIp(int i) {
-
         return (i & 0xFF) + "." +
                 ((i >> 8) & 0xFF) + "." +
                 ((i >> 16) & 0xFF) + "." +

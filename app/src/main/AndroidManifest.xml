@@ -41,6 +41,7 @@
         </activity>
         <activity android:name=".ui.activity.ChangeSettingActivity" />
         <activity android:name=".ui.activity.HostSettingActivity" />
+        <activity android:name=".ui.activity.DnsActivity" />
 
         <service
             android:name=".net.LocalVpnService"

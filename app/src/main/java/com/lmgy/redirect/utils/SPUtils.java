@@ -28,7 +28,7 @@ import java.util.Set;
  * Created by lmgy on 14/8/2019
  */
 public class SPUtils {
-    private static String SP_NAME = "redirect_sp";
+    private static final String SP_NAME = "redirect_sp";
     private static final String TAG = "SPUtils";
 
     /**
@@ -80,8 +80,9 @@ public class SPUtils {
      * 2、Constructor.newInstance()：可以根据传入的参数，调用任意构造构造函数。
      * Integer、Boolean、Long、Float 没有默认构造函数，只能通过 Constructor.newInstance() 调用
      * String 是有默认构造函数的，两种方法都适用
-     * @param clazz  String.class、Integer.class、Boolean.class、Long.class、Float.class
-     * @param <T> T
+     *
+     * @param clazz String.class、Integer.class、Boolean.class、Long.class、Float.class
+     * @param <T>   T
      * @return T
      */
     private static <T> T getT(Class<T> clazz) {
@@ -290,13 +291,14 @@ public class SPUtils {
 
     /**
      * 使用SharedPreferences保存集合
-     * @param context  上下文
-     * @param key  储存的key
-     * @param map  map数据
+     *
+     * @param context 上下文
+     * @param key     储存的key
+     * @param map     map数据
      */
-    public static <K, V> void setHashMapData(Context context, String key, Map<K, V> map){
+    public static <K, V> void setHashMapData(Context context, String key, Map<K, V> map) {
         if (map == null) {
-            return ;
+            return;
         }
 
         SharedPreferences sp = context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
@@ -309,17 +311,18 @@ public class SPUtils {
 
     /**
      * 获取SharedPreferences保存的集合
-     * @param context  上下文
-     * @param key  储存的key
-     * @param clsV  解析类型
-     * @return  Map集合
+     *
+     * @param context 上下文
+     * @param key     储存的key
+     * @param clsV    解析类型
+     * @return Map集合
      */
-    public static <V> Map<String, V> getHashMapData(Context context, String key, Class<V> clsV){
+    public static <V> Map<String, V> getHashMapData(Context context, String key, Class<V> clsV) {
         SharedPreferences sp = context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
         Map<String, V> map = new HashMap<>();
         String strJson = sp.getString(key, "");
         Gson gson = new Gson();
-        JsonObject obj =new JsonParser().parse(strJson).getAsJsonObject();
+        JsonObject obj = new JsonParser().parse(strJson).getAsJsonObject();
         Set<Map.Entry<String, JsonElement>> entrySet = obj.entrySet();
         for (Map.Entry<String, JsonElement> entry : entrySet) {
             String entryKey = entry.getKey();

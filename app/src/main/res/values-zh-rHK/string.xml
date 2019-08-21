@@ -22,6 +22,7 @@
     <string name="action_add">添加</string>
     <string name="action_toggle">轉換</string>
     <string name="action_delete">刪除</string>
+    <string name="action_undo">撤銷</string>
     <string name="navigation_drawer_open">開啟導航欄</string>
     <string name="navigation_drawer_close">關閉導航欄</string>
     <string name="nav_home">主頁</string>

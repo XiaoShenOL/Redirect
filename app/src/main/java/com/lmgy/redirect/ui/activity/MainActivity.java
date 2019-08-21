@@ -44,8 +44,9 @@ public class MainActivity extends AppCompatActivity
     private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (LocalVpnService.BROADCAST_VPN_STATE.equals(intent.getAction()) && intent.getBooleanExtra("running", false))
+            if (LocalVpnService.BROADCAST_VPN_STATE.equals(intent.getAction()) && intent.getBooleanExtra("running", false)) {
                 waitingForVPNStart = false;
+            }
         }
     };
 
@@ -67,8 +68,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    if (checkHost() == -1) showDialog();
-                    else startVPN();
+                    if (checkHost() == -1) {
+                        showDialog();
+                    } else {
+                        startVPN();
+                    }
                 } else {
                     shutdownVPN();
                 }
@@ -89,21 +93,26 @@ public class MainActivity extends AppCompatActivity
     private void startVPN() {
         waitingForVPNStart = false;
         Intent vpnIntent = LocalVpnService.prepare(this);
-        if (vpnIntent != null)
+        if (vpnIntent != null) {
             startActivityForResult(vpnIntent, VPN_REQUEST_CODE);
-        else
+        } else {
             onActivityResult(VPN_REQUEST_CODE, RESULT_OK, null);
+        }
     }
 
     private int checkHost() {
         List<HostData> list = SPUtils.getDataList(this, "hostList", HostData.class);
-        if (list.size() == 0) return -1;
-        else return 1;
+        if (list.size() == 0) {
+            return -1;
+        } else {
+            return 1;
+        }
     }
 
     private void shutdownVPN() {
-        if (LocalVpnService.isRunning())
+        if (LocalVpnService.isRunning()) {
             startService(new Intent(this, LocalVpnService.class).setAction(LocalVpnService.ACTION_DISCONNECT));
+        }
         setButton(true);
     }
 
@@ -151,7 +160,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();

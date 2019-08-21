@@ -13,7 +13,7 @@ public class HostData implements Serializable {
     private String hostName;
     private String remark;
 
-    public HostData(boolean type, String ipAddress, String hostName, String remark){
+    public HostData(boolean type, String ipAddress, String hostName, String remark) {
         this.type = type;
         this.ipAddress = ipAddress;
         this.hostName = hostName;

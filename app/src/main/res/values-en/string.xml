@@ -22,6 +22,7 @@
     <string name="action_add">Add</string>
     <string name="action_toggle">Toggle</string>
     <string name="action_delete">Delete</string>
+    <string name="action_undo">Undo</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_home">Home</string>

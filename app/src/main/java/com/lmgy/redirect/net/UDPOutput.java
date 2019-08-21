@@ -30,22 +30,19 @@ public class UDPOutput implements Runnable {
 
     private static final int MAX_CACHE_SIZE = 50;
     private LRUCache<String, DatagramChannel> channelCache =
-            new LRUCache<>(MAX_CACHE_SIZE, new LRUCache.CleanupCallback<String, DatagramChannel>()
-            {
+            new LRUCache<>(MAX_CACHE_SIZE, new LRUCache.CleanupCallback<String, DatagramChannel>() {
                 @Override
-                public void cleanup(Map.Entry<String, DatagramChannel> eldest)
-                {
+                public void cleanup(Map.Entry<String, DatagramChannel> eldest) {
                     closeChannel(eldest.getValue());
                 }
             });
 
-    public UDPOutput(ConcurrentLinkedQueue<Packet> inputQueue,ConcurrentLinkedQueue<ByteBuffer> outputQueue, Selector selector, LocalVpnService localVpnService)
-    {
+    public UDPOutput(ConcurrentLinkedQueue<Packet> inputQueue, ConcurrentLinkedQueue<ByteBuffer> outputQueue, Selector selector, LocalVpnService localVpnService) {
         this.inputQueue = inputQueue;
         this.selector = selector;
         this.localVpnService = localVpnService;
-        this.outputQueue=outputQueue;
-        this.stringBuild=new StringBuilder(32);
+        this.outputQueue = outputQueue;
+        this.stringBuild = new StringBuilder(32);
     }
 
     @Override
@@ -56,14 +53,14 @@ public class UDPOutput implements Runnable {
             while (!Thread.interrupted()) {
 
                 Packet currentPacket = inputQueue.poll();
-                if (currentPacket == null){
+                if (currentPacket == null) {
                     Thread.sleep(11);
                     continue;
                 }
                 // hook dns packet
-                if(currentPacket.udpHeader.destinationPort==53){
-                    ByteBuffer packet_buffer= DnsUtils.handleDnsPacket(currentPacket);
-                    if(packet_buffer!=null){
+                if (currentPacket.udpHeader.destinationPort == 53) {
+                    ByteBuffer packet_buffer = DnsUtils.handleDnsPacket(currentPacket);
+                    if (packet_buffer != null) {
                         this.outputQueue.offer(packet_buffer);
                         continue;
                     }
@@ -71,17 +68,14 @@ public class UDPOutput implements Runnable {
                 InetAddress destinationAddress = currentPacket.ipHeader.destinationAddress;
                 int destinationPort = currentPacket.udpHeader.destinationPort;
                 int sourcePort = currentPacket.udpHeader.sourcePort;
-                String ipAndPort=getStringBuild().append(destinationAddress.getHostAddress()).append(destinationPort).append(sourcePort).toString();
+                String ipAndPort = getStringBuild().append(destinationAddress.getHostAddress()).append(destinationPort).append(sourcePort).toString();
                 DatagramChannel outputChannel = channelCache.get(ipAndPort);
                 if (outputChannel == null) {
                     outputChannel = DatagramChannel.open();
                     localVpnService.protect(outputChannel.socket());
-                    try
-                    {
+                    try {
                         outputChannel.connect(new InetSocketAddress(destinationAddress, destinationPort));
-                    }
-                    catch (IOException e)
-                    {
+                    } catch (IOException e) {
                         Log.e(TAG, "Connection error: " + ipAndPort, e);
                         closeChannel(outputChannel);
                         ByteBufferPool.release(currentPacket.backingBuffer);
@@ -96,58 +90,43 @@ public class UDPOutput implements Runnable {
                     channelCache.put(ipAndPort, outputChannel);
                 }
 
-                try
-                {
+                try {
                     ByteBuffer payloadBuffer = currentPacket.backingBuffer;
                     while (payloadBuffer.hasRemaining())
                         outputChannel.write(payloadBuffer);
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     Log.e(TAG, "Network write error: " + ipAndPort, e);
                     channelCache.remove(ipAndPort);
                     closeChannel(outputChannel);
                 }
                 ByteBufferPool.release(currentPacket.backingBuffer);
             }
-        }
-        catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             Log.i(TAG, "Stopping");
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             Log.i(TAG, e.toString(), e);
-        }
-        finally
-        {
+        } finally {
             closeAll();
         }
     }
 
-    private void closeAll()
-    {
+    private void closeAll() {
         Iterator<Map.Entry<String, DatagramChannel>> it = channelCache.entrySet().iterator();
-        while (it.hasNext())
-        {
+        while (it.hasNext()) {
             closeChannel(it.next().getValue());
             it.remove();
         }
     }
 
-    private void closeChannel(DatagramChannel channel)
-    {
-        try
-        {
+    private void closeChannel(DatagramChannel channel) {
+        try {
             channel.close();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             // Ignore
         }
     }
 
-    private StringBuilder getStringBuild(){
+    private StringBuilder getStringBuild() {
         stringBuild.setLength(0);
         return stringBuild;
     }

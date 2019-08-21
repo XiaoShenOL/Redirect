@@ -6,11 +6,11 @@ import java.util.LinkedHashMap;
  * Created by lmgy on 14/8/2019
  */
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
+    private static final long serialVersionUID = 8978146042716526243L;
     private int maxSize;
     private CleanupCallback callback;
 
-    public LRUCache(int maxSize, CleanupCallback callback)
-    {
+    public LRUCache(int maxSize, CleanupCallback callback) {
         super(maxSize + 1, 1, true);
 
         this.maxSize = maxSize;
@@ -18,18 +18,15 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     }
 
     @Override
-    protected boolean removeEldestEntry(Entry<K, V> eldest)
-    {
-        if (size() > maxSize)
-        {
+    protected boolean removeEldestEntry(Entry<K, V> eldest) {
+        if (size() > maxSize) {
             callback.cleanup(eldest);
             return true;
         }
         return false;
     }
 
-    public static interface CleanupCallback<K, V>
-    {
+    public static interface CleanupCallback<K, V> {
         public void cleanup(Entry<K, V> eldest);
     }
 }

@@ -114,8 +114,6 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            default:
-                break;
             case R.id.btn_save:
                 if (isIP(mIpAddress.getText().toString())) {
                     if (!mHostname.getText().toString().isEmpty()) {
@@ -127,6 +125,8 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
                 } else {
                     Snackbar.make(mCoordinatorLayout, getString(R.string.input_correct_ip), Snackbar.LENGTH_SHORT).show();
                 }
+                break;
+            default:
                 break;
         }
     }
