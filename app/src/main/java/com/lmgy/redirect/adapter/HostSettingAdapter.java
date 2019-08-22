@@ -67,8 +67,8 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
     }
 
     class HostSettingViewHolder extends RecyclerView.ViewHolder {
-        TextView title;
-        FrameLayout rootView;
+        private TextView title;
+        private FrameLayout rootView;
 
         HostSettingViewHolder(View itemView) {
             super(itemView);
