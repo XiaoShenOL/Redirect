@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dns_ipv4_address">
+        <item> </item>
+        <item>8.8.8.8</item>
+        <item>208.67.222.222</item>
+        <item>180.76.76.76</item>
+    </string-array>
+    <string-array name="dns_ipv6_address">
+        <item> </item>
+        <item>2001:4860:4860::8888</item>
+        <item>2620:119:35::35</item>
+        <item>2400:da00::6666</item>
+    </string-array>
+
+    <string-array name="dns_name">
+        <item>Custom DNS</item>
+        <item>Google DNS</item>
+        <item>Open DNS</item>
+        <item>Baidu DNS</item>
+    </string-array>
+</resources>

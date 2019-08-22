@@ -14,6 +14,10 @@
             android:id="@+id/nav_rules"
             android:title="@string/nav_rules"
             android:icon="@drawable/ic_description"/>
+        <item
+            android:id="@+id/nav_dns"
+            android:title="@string/nav_dns"
+            android:icon="@drawable/ic_device_hub"/>
     </group>
 
 

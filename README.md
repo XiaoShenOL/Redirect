@@ -12,15 +12,22 @@ For android devices, No root required, redirection is implemented through vpn, w
 
 * __[Releases](https://github.com/lmgy/Redirect/releases)__ - Release signature
 
+* __[APKPure](https://apkpure.com/redirect/com.lmgy.redirect)__ - Release signature
+
+[<img alt='Get it on Google Play'
+      src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
+      height="80">](https://play.google.com/store/apps/details?id=com.lmgy.redirect)
+
 ## Supports
 
 * support wildcard DNS records.
 * IPv4 and IPv6 protocols
 * No root required, no ads contained
-* Many languages
+* Multi-language Supported
 * Low power consume
+* Custom DNS server __(default Google DNS)__
 
-**Users must comply with local laws and regulations.**
+__Users must comply with local laws and regulations.__
 
 ## Requirements
 
@@ -28,7 +35,7 @@ For android devices, No root required, redirection is implemented through vpn, w
 
 ## License
 
-Copyright (C) 2019 by lmgy
+Copyright (C) 2017 - 2019 by lmgy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

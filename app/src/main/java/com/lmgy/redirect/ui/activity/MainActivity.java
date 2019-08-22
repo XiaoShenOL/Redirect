@@ -20,6 +20,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.kyleduo.switchbutton.SwitchButton;
 import com.lmgy.redirect.BuildConfig;
 import com.lmgy.redirect.R;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
     private static final int VPN_REQUEST_CODE = 0x0F;
+    private static final int DNS_REQUEST_CODE = 0;
 
     private Toolbar mToolbar;
     private SwitchButton mBtnVpn;
@@ -123,6 +125,8 @@ public class MainActivity extends AppCompatActivity
             waitingForVPNStart = true;
             startService(new Intent(this, LocalVpnService.class).setAction(LocalVpnService.ACTION_CONNECT));
             setButton(false);
+        } else if (requestCode == DNS_REQUEST_CODE && resultCode == RESULT_OK) {
+            Snackbar.make(mDrawerLayout, data.getStringExtra("result"), Snackbar.LENGTH_SHORT).show();
         }
     }
 
@@ -174,6 +178,8 @@ public class MainActivity extends AppCompatActivity
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else if (id == R.id.nav_dns) {
+            startActivityForResult(new Intent(getApplicationContext(), DnsActivity.class), 0);
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;

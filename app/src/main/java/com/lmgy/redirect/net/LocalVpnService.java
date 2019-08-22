@@ -1,9 +1,5 @@
 package com.lmgy.redirect.net;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -17,6 +13,7 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.lmgy.redirect.R;
+import com.lmgy.redirect.bean.DnsBean;
 import com.lmgy.redirect.bean.HostData;
 import com.lmgy.redirect.receiver.NetworkReceiver;
 import com.lmgy.redirect.utils.DnsUtils;
@@ -30,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.Selector;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,8 +47,6 @@ public class LocalVpnService extends VpnService {
     private static final int VPN_DNS6_MASK = 128;
     private static final int VPN_ROUTE_MASK = 0;
     private static final int VPN_MTU = 4096;
-    private static String VPN_DNS4 = "8.8.8.8";
-    private static String VPN_DNS6 = "2001:4860:4860::8888";
 
     public static final String BROADCAST_VPN_STATE = LocalVpnService.class.getName() + ".VPN_STATE";
     public static final String ACTION_CONNECT = LocalVpnService.class.getName() + ".START";
@@ -58,8 +54,10 @@ public class LocalVpnService extends VpnService {
 
     private static boolean isRunning = false;
     private static Thread threadHandleHosts = null;
-    private ParcelFileDescriptor vpnInterface = null;
 
+    private String VPN_DNS4;
+    private String VPN_DNS6;
+    private ParcelFileDescriptor vpnInterface = null;
     private ConcurrentLinkedQueue<Packet> deviceToNetworkUDPQueue;
     private ConcurrentLinkedQueue<Packet> deviceToNetworkTCPQueue;
     private ConcurrentLinkedQueue<ByteBuffer> networkToDeviceQueue;
@@ -68,31 +66,16 @@ public class LocalVpnService extends VpnService {
     private Selector udpSelector;
     private Selector tcpSelector;
     private NetworkReceiver netStateReceiver;
-    private static boolean isOAndBoot = false;
-
 
     @Override
     public void onCreate() {
         registerNetReceiver();
         super.onCreate();
-        if (isOAndBoot) {
-            //android 8.0 boot
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel channel = new NotificationChannel("redirect_channel_id", "System", NotificationManager.IMPORTANCE_NONE);
-                NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                manager.createNotificationChannel(channel);
-                Notification notification = new Notification.Builder(this, "redirect_channel_id")
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentTitle("Redirect Running")
-                        .build();
-                startForeground(1, notification);
-            }
-            isOAndBoot = false;
-        }
-        setupHostFile();
+        setupDNS();
+        setupHostRules();
         setupVPN();
         if (vpnInterface == null) {
-            Log.d(TAG, "unknow error");
+            Log.d(TAG, "unknown error");
             stopVService();
             return;
         }
@@ -120,8 +103,19 @@ public class LocalVpnService extends VpnService {
         }
     }
 
+    private void setupDNS() {
+        List<DnsBean> dnsBeanList = SPUtils.getDataList(this, "dnsList", DnsBean.class);
+        if (dnsBeanList.isEmpty()) {
+            VPN_DNS4 = "8.8.8.8";
+            VPN_DNS6 = "2001:4860:4860::8888";
+        } else {
+            VPN_DNS4 = dnsBeanList.get(0).getIpv4();
+            VPN_DNS6 = dnsBeanList.get(0).getIpv6();
+        }
+    }
 
-    private void setupHostFile() {
+
+    private void setupHostRules() {
         try {
             new Thread() {
                 @Override

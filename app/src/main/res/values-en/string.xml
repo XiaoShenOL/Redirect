@@ -12,11 +12,15 @@
     <string name="input_correct_ip">Please enter the correct IP address</string>
     <string name="delete">Delete</string>
     <string name="delete_message">Are you sure you want to delete the selected item?</string>
-    <string name="delete_successful">Successfully Deleted</string>
-    <string name="save_successful">Successfully Saved</string>
+    <string name="delete_successful">Deleted successfully</string>
+    <string name="save_successful">Saved successfully </string>
+    <string name="save_successful_restart">Saved successfully, please restart VPN</string>
+    <string name="empty">Can not be empty</string>
     <string name="hint_ip">IP Address</string>
     <string name="hint_hostname">Hostname</string>
     <string name="hint_remark">Remark</string>
+    <string name="hint_ipv4">IPv4</string>
+    <string name="hint_ipv6">IPv6</string>
     <string name="action_edit">Edit</string>
     <string name="btn_save">Save</string>
     <string name="action_add">Add</string>
@@ -30,5 +34,6 @@
     <string name="nav_github">GitHub</string>
     <string name="nav_about">About</string>
     <string name="nav_rules">Rules</string>
+    <string name="nav_dns">DNS</string>
     <string name="tv_empty">No rules found</string>
 </resources>

@@ -14,9 +14,13 @@
     <string name="delete_message">確定要刪除已選項？</string>
     <string name="delete_successful">刪除成功</string>
     <string name="save_successful">保存成功</string>
+    <string name="save_successful_restart">保存成功，請重新打開VPN</string>
+    <string name="empty">內容不能為空</string>
     <string name="hint_ip">IP地址</string>
     <string name="hint_hostname">Hostname</string>
     <string name="hint_remark">備註</string>
+    <string name="hint_ipv4">IPv4</string>
+    <string name="hint_ipv6">IPv6</string>
     <string name="action_edit">編輯</string>
     <string name="btn_save">保存</string>
     <string name="action_add">添加</string>
@@ -30,5 +34,6 @@
     <string name="nav_github">GitHub</string>
     <string name="nav_about">關於</string>
     <string name="nav_rules">規則</string>
+    <string name="nav_dns">DNS</string>
     <string name="tv_empty">還沒添加任何規則</string>
 </resources>
