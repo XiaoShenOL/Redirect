@@ -33,7 +33,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String TAG = "MainActivity";
+//    private static final String TAG = "MainActivity";
     private static final int VPN_REQUEST_CODE = 0x0F;
     private static final int DNS_REQUEST_CODE = 0;
 

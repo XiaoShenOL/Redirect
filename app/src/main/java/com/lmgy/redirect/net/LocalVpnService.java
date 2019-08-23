@@ -173,11 +173,9 @@ public class LocalVpnService extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            if (ACTION_DISCONNECT.equals(intent.getAction())) {
-                stopVService();
-                return START_NOT_STICKY;
-            }
+        if (intent != null && ACTION_DISCONNECT.equals(intent.getAction())) {
+            stopVService();
+            return START_NOT_STICKY;
         }
         return START_STICKY;
     }

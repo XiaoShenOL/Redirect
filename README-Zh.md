@@ -6,11 +6,11 @@
 ![GitHub](https://img.shields.io/github/license/lmgy/Redirect)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flmgy%2FRedirect.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flmgy%2FRedirect?ref=badge_shield)
 
-[中文README.md](/README-Zh.md)
+[English README.md](/README.md)
 
-For android devices, No root required, redirection is implemented through vpn, wildcard dns records are supported. Redirect helps developers customized hosts(/system/etc/hosts) file through vpn on android devices.
+针对于Android设备，不需要root权限，通过vpn实现重定向，支持dns泛解析。 Redirect通过Android设备上的vpn功能来帮助开发人员定制(/system/etc/hosts)文件。
 
-## Installation
+## 安装
 
 * __[Releases](https://github.com/lmgy/Redirect/releases)__ - Release signature
 
@@ -20,20 +20,20 @@ For android devices, No root required, redirection is implemented through vpn, w
       src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
       height="80">](https://play.google.com/store/apps/details?id=com.lmgy.redirect)
 
-## Supports
+## 功能
 
-* support wildcard DNS records.
-* IPv4 and IPv6 protocols
-* No root required, no ads contained
-* Multi-language Supported
-* Low power consume
-* Custom DNS server __(default Google DNS)__
+* 支持dns泛解析
+* 支持IPv4和IPv6协议
+* 不需要root权限，无广告
+* 支持多种语言
+* 更低的耗电量
+* 支持自定义DNS __(默认 Google DNS)__
 
-__Users must comply with local laws and regulations.__
+__用户必须遵守当地法律法规。__
 
-## Requirements
+## 需求
 
-* Minimum Android version: >= 4.4 (API 19)
+* 最低安卓版本: >= 4.4 (API 19)
 
 ## License
 
