@@ -24,6 +24,14 @@
     <group android:checkableBehavior="none"
         android:id="@+id/nav_group_about">
         <item
+            android:id="@+id/nav_star"
+            android:title="@string/nav_star"
+            android:icon="@drawable/ic_star"/>
+        <item
+            android:id="@+id/nav_share"
+            android:title="@string/nav_share"
+            android:icon="@drawable/ic_share"/>
+        <item
             android:id="@+id/nav_github"
             android:title="@string/nav_github"
             android:icon="@drawable/ic_github"/>

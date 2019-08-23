@@ -29,6 +29,7 @@ import com.lmgy.redirect.net.LocalVpnService;
 import com.lmgy.redirect.utils.SPUtils;
 
 import java.util.List;
+import java.util.prefs.Preferences;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -167,19 +168,41 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_rules) {
-            startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
-        } else if (id == R.id.nav_about) {
-            startActivity(new Intent(getApplicationContext(), AboutActivity.class));
-        } else if (id == R.id.nav_github) {
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/lmgy/Redirect"))
-                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if (id == R.id.nav_dns) {
-            startActivityForResult(new Intent(getApplicationContext(), DnsActivity.class), 0);
+        switch (id){
+            case R.id.nav_rules:
+                startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
+                break;
+            case R.id.nav_about:
+                startActivity(new Intent(getApplicationContext(), AboutActivity.class));
+                break;
+            case R.id.nav_github:
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/lmgy/Redirect"))
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.nav_dns:
+                startActivityForResult(new Intent(getApplicationContext(), DnsActivity.class), 0);
+                break;
+            case R.id.nav_star:
+                final String appPackageName = this.getPackageName();
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                } catch (android.content.ActivityNotFoundException e) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                }
+                break;
+            case R.id.nav_share:
+                Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                sharingIntent.setType("text/plain");
+                sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.app_share_text));
+                startActivity(Intent.createChooser(sharingIntent, getResources().getString(R.string.nav_share)));
+                break;
+            default:
+                break;
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;

@@ -8,11 +8,16 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.AsyncListDiffer;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.HostData;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,14 +27,32 @@ import java.util.List;
  */
 public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.HostSettingViewHolder> {
     private Context mContext;
-    private List<HostData> mHostDataList;
-    private List<String> mSelectedIds = new ArrayList<>();
+    private List<String> mSelectedIds;
+    private AsyncListDiffer<HostData> mDiffer;
+    private DiffUtil.ItemCallback<HostData> diffCallback = new DiffUtil.ItemCallback<HostData>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull HostData oldItem, @NonNull HostData newItem) {
+            return oldItem.getHostName().equals(newItem.getHostName()) && oldItem.getIpAddress().equals(newItem.getIpAddress());
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull HostData oldItem, @NonNull HostData newItem) {
+            return oldItem.getHostName().equals(newItem.getHostName()) && oldItem.getIpAddress().equals(newItem.getIpAddress());
+        }
+    };
 
     public HostSettingAdapter(Context context, List<HostData> hostDataList) {
         this.mContext = context;
-        this.mHostDataList = hostDataList;
+        mDiffer = new AsyncListDiffer<>(this, diffCallback);
+        mSelectedIds = new ArrayList<>();
+        mDiffer.submitList(hostDataList);
     }
 
+    public void setHostDataList(List<HostData> mHostDataList) {
+        mDiffer.submitList(mHostDataList);
+    }
+
+    @NotNull
     @Override
     public HostSettingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -39,26 +62,16 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
 
     @Override
     public void onBindViewHolder(HostSettingViewHolder holder, int position) {
-        String text = mHostDataList.get(position).getIpAddress()
-                + "   " + mHostDataList.get(position).getHostName()
-                + "   " + mHostDataList.get(position).getRemark();
-        if (!mHostDataList.get(position).getType())
-            text = "#" + text;
-        holder.title.setText(text);
-        if (mSelectedIds.contains(String.valueOf(position))) {
-            holder.rootView.setForeground(new ColorDrawable(ContextCompat.getColor(mContext, R.color.colorControlActivated)));
-        } else {
-            holder.rootView.setForeground(new ColorDrawable(ContextCompat.getColor(mContext, android.R.color.transparent)));
-        }
+        holder.setData(getItem(position), position);
     }
 
     @Override
     public int getItemCount() {
-        return mHostDataList.size();
+        return mDiffer.getCurrentList().size();
     }
 
     public HostData getItem(int position) {
-        return mHostDataList.get(position);
+        return mDiffer.getCurrentList().get(position);
     }
 
     public void setSelectedIds(List<String> selectedIds) {
@@ -74,6 +87,20 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
             super(itemView);
             title = itemView.findViewById(R.id.title);
             rootView = itemView.findViewById(R.id.root_view);
+        }
+
+        public void setData(HostData hostData, int position) {
+            String text = hostData.getIpAddress()
+                    + "   " + hostData.getHostName()
+                    + "   " + hostData.getRemark();
+            if (!hostData.getType())
+                text = "#" + text;
+            title.setText(text);
+            if (mSelectedIds.contains(String.valueOf(position))) {
+                rootView.setForeground(new ColorDrawable(ContextCompat.getColor(mContext, R.color.colorControlActivated)));
+            } else {
+                rootView.setForeground(new ColorDrawable(ContextCompat.getColor(mContext, android.R.color.transparent)));
+            }
         }
     }
 }

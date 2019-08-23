@@ -35,5 +35,8 @@
     <string name="nav_about">关于</string>
     <string name="nav_rules">规则</string>
     <string name="nav_dns">DNS</string>
+    <string name="nav_star">去评分</string>
+    <string name="nav_share">分享</string>
     <string name="tv_empty">还没添加任何规则</string>
+    <string name="app_share_text">Download this free Android app to customize your hosts! https://play.google.com/store/apps/details?id=com.lmgy.redirect</string>
 </resources>

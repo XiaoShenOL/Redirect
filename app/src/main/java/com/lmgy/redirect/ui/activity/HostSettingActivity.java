@@ -111,15 +111,13 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                 final List<HostData> copyDataList = new ArrayList<>(dataList);
                 dataList.remove(position);
                 SPUtils.setDataList(getApplicationContext(), "hostList", dataList);
-                mAdapter = new HostSettingAdapter(getApplicationContext(), dataList);
-                mRv.setAdapter(mAdapter);
+                mAdapter.setHostDataList(dataList);
                 Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo), new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 SPUtils.setDataList(getApplicationContext(), "hostList", copyDataList);
-                                mAdapter = new HostSettingAdapter(getApplicationContext(), copyDataList);
-                                mRv.setAdapter(mAdapter);
+                                mAdapter.setHostDataList(copyDataList);
                             }
                         })
                         .show();
@@ -131,8 +129,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
-                mRv.setAdapter(mAdapter);
+                mAdapter.setHostDataList(getList());
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -143,8 +140,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 0 && resultCode == 3) {
             Snackbar.make(mCoordinatorLayout, data.getStringExtra("result"), Snackbar.LENGTH_SHORT).show();
-            mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
-            mRv.setAdapter(mAdapter);
+            mAdapter.setHostDataList(getList());
         }
     }
 
@@ -213,8 +209,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                                     dataList.remove(Integer.parseInt(id));
                                 }
                                 SPUtils.setDataList(getApplicationContext(), "hostList", dataList);
-                                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
-                                mRv.setAdapter(mAdapter);
+                                mAdapter.setHostDataList(dataList);
                                 Snackbar.make(mCoordinatorLayout, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT).show();
                             }
                         })
@@ -232,8 +227,7 @@ public class HostSettingActivity extends AppCompatActivity implements ActionMode
                     hostData.setType(!hostData.getType());
                 }
                 SPUtils.setDataList(this, "hostList", hostDataList);
-                mAdapter = new HostSettingAdapter(getApplicationContext(), getList());
-                mRv.setAdapter(mAdapter);
+                mAdapter.setHostDataList(hostDataList);
                 break;
             default:
                 break;
