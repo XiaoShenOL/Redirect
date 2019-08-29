@@ -8,37 +8,15 @@
     tools:context=".ui.activity.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
-        android:layout_width="128dp"
-        android:layout_height="256dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <fragment
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:defaultNavHost="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.kyleduo.switchbutton.SwitchButton
-            android:id="@+id/btn_vpn"
-            android:layout_width="256dp"
-            android:layout_height="128dp"
-            android:rotation="-90"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            app:kswTextAdjust="-2dp"
-            app:kswTextExtra="8dp"
-            app:kswTextOff="Off"
-            app:kswTextOn="On"
-            app:kswAnimationDuration="300"
-            app:kswTintColor="@color/colorPrimary"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/mobile_navigation" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

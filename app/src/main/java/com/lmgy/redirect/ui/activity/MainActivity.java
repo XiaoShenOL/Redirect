@@ -1,160 +1,65 @@
 package com.lmgy.redirect.ui.activity;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.snackbar.Snackbar;
-import com.kyleduo.switchbutton.SwitchButton;
 import com.lmgy.redirect.BuildConfig;
 import com.lmgy.redirect.R;
-import com.lmgy.redirect.bean.HostData;
-import com.lmgy.redirect.net.LocalVpnService;
-import com.lmgy.redirect.utils.SPUtils;
 
-import java.util.List;
-import java.util.prefs.Preferences;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
-
-//    private static final String TAG = "MainActivity";
-    private static final int VPN_REQUEST_CODE = 0x0F;
-    private static final int DNS_REQUEST_CODE = 0;
 
     private Toolbar mToolbar;
-    private SwitchButton mBtnVpn;
     private NavigationView mNavView;
     private DrawerLayout mDrawerLayout;
+    private AppBarConfiguration mAppBarConfiguration;
+    private Fragment fragment;
 
-    private boolean waitingForVPNStart;
-    private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (LocalVpnService.BROADCAST_VPN_STATE.equals(intent.getAction()) && intent.getBooleanExtra("running", false)) {
-                waitingForVPNStart = false;
-            }
-        }
-    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initView();
 
+        initView();
         setSupportActionBar(mToolbar);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        mNavView.setNavigationItemSelectedListener(this);
+
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_rules, R.id.nav_dns,
+                R.id.nav_star, R.id.nav_share ,R.id.nav_github,
+                R.id.nav_about)
+                .setDrawerLayout(mDrawerLayout)
+                .build();
+
+        fragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+
         ((TextView) mNavView.getHeaderView(0).findViewById(R.id.tv_nav_version)).setText(getString(R.string.nav_version) + " " + BuildConfig.VERSION_NAME);
 
-        mBtnVpn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    if (checkHost() == -1) {
-                        showDialog();
-                    } else {
-                        startVPN();
-                    }
-                } else {
-                    shutdownVPN();
-                }
-            }
-        });
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(mNavView, navController);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(vpnStateReceiver,
-                new IntentFilter(LocalVpnService.BROADCAST_VPN_STATE));
+        mNavView.setNavigationItemSelectedListener(this);
+
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setButton(!waitingForVPNStart && !LocalVpnService.isRunning());
-    }
-
-
-    private void startVPN() {
-        waitingForVPNStart = false;
-        Intent vpnIntent = LocalVpnService.prepare(this);
-        if (vpnIntent != null) {
-            startActivityForResult(vpnIntent, VPN_REQUEST_CODE);
-        } else {
-            onActivityResult(VPN_REQUEST_CODE, RESULT_OK, null);
-        }
-    }
-
-    private int checkHost() {
-        List<HostData> list = SPUtils.getDataList(this, "hostList", HostData.class);
-        if (list.size() == 0) {
-            return -1;
-        } else {
-            return 1;
-        }
-    }
-
-    private void shutdownVPN() {
-        if (LocalVpnService.isRunning()) {
-            startService(new Intent(this, LocalVpnService.class).setAction(LocalVpnService.ACTION_DISCONNECT));
-        }
-        setButton(true);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == VPN_REQUEST_CODE && resultCode == RESULT_OK) {
-            waitingForVPNStart = true;
-            startService(new Intent(this, LocalVpnService.class).setAction(LocalVpnService.ACTION_CONNECT));
-            setButton(false);
-        } else if (requestCode == DNS_REQUEST_CODE && resultCode == RESULT_OK) {
-            Snackbar.make(mDrawerLayout, data.getStringExtra("result"), Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-    private void setButton(boolean enable) {
-        mBtnVpn.setChecked(!enable);
-    }
-
-    private void showDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false)
-                .setTitle(getString(R.string.dialog_title))
-                .setMessage(getString(R.string.dialog_message))
-                .setPositiveButton(getString(R.string.dialog_confirm), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        setButton(true);
-                        startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
-                    }
-                })
-                .setNegativeButton(getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        setButton(true);
-                    }
-                })
-                .show();
-    }
 
     @Override
     public void onBackPressed() {
@@ -166,14 +71,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+
+    @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id){
-            case R.id.nav_rules:
-                startActivity(new Intent(getApplicationContext(), HostSettingActivity.class));
+        switch (item.getItemId()){
+            case R.id.nav_home:
+                NavHostFragment.findNavController(fragment).navigate(R.id.nav_home);
                 break;
-            case R.id.nav_about:
-                startActivity(new Intent(getApplicationContext(), AboutActivity.class));
+            case R.id.nav_rules:
+                NavHostFragment.findNavController(fragment).navigate(R.id.nav_rules);
+                break;
+            case R.id.nav_dns:
+                NavHostFragment.findNavController(fragment).navigate(R.id.nav_dns);
                 break;
             case R.id.nav_github:
                 try {
@@ -182,9 +96,6 @@ public class MainActivity extends AppCompatActivity
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                break;
-            case R.id.nav_dns:
-                startActivityForResult(new Intent(getApplicationContext(), DnsActivity.class), 0);
                 break;
             case R.id.nav_star:
                 final String appPackageName = this.getPackageName();
@@ -201,6 +112,9 @@ public class MainActivity extends AppCompatActivity
                 sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.app_share_text));
                 startActivity(Intent.createChooser(sharingIntent, getResources().getString(R.string.nav_share)));
                 break;
+            case R.id.nav_about:
+                NavHostFragment.findNavController(fragment).navigate(R.id.nav_about);
+                break;
             default:
                 break;
         }
@@ -208,11 +122,10 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void initView() {
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        mBtnVpn = (SwitchButton) findViewById(R.id.btn_vpn);
-        mNavView = (NavigationView) findViewById(R.id.nav_view);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+    private void initView(){
+        mToolbar = findViewById(R.id.toolbar);
+        mNavView = findViewById(R.id.nav_view);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
     }
 
 }

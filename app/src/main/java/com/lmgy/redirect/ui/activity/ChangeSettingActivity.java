@@ -1,15 +1,17 @@
 package com.lmgy.redirect.ui.activity;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.lmgy.redirect.R;
@@ -24,22 +26,11 @@ import java.util.regex.Pattern;
 public class ChangeSettingActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "ChangeSettingActivity";
-    /**
-     * ip address
-     */
     private AppCompatEditText mIpAddress;
-    /**
-     * hostname
-     */
     private AppCompatEditText mHostname;
-    /**
-     * remark
-     */
     private AppCompatEditText mRemark;
-    /**
-     * SAVE
-     */
     private Button mBtnSave;
+
     private int mId;
     private HostData hostData;
     private CoordinatorLayout mCoordinatorLayout;
@@ -49,11 +40,14 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_setting);
         initView();
+
         ActionBar actionBar = Objects.requireNonNull(getSupportActionBar());
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(getString(R.string.action_edit));
+
         hostData = (HostData) getIntent().getSerializableExtra("hostData");
         mId = getIntent().getIntExtra("id", -1);
+
         if (hostData != null) {
             mIpAddress.setText(hostData.getIpAddress());
             mHostname.setText(hostData.getHostName());
@@ -61,14 +55,16 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_select, menu);
+        return true;
+    }
+
     private boolean isIP(String address) {
-        //首先对长度进行判断
         if (address.length() < 7 || address.length() > 15) {
             return false;
         }
-        /**
-         * 判断IP格式和范围
-         */
         String rexp = "([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}";
         Pattern pat = Pattern.compile(rexp);
         Matcher mat = pat.matcher(address);
@@ -95,9 +91,26 @@ public class ChangeSettingActivity extends AppCompatActivity implements View.OnC
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
+        switch (item.getItemId()){
+            case android.R.id.home:
+                finish();
+                break;
+            case R.id.action_delete:
+                List<HostData> dataList = SPUtils.getDataList(this, "hostList", HostData.class);
+                if (hostData != null){
+                    for(HostData it: dataList){
+                        if(it.getIpAddress().equals(hostData.getIpAddress()) && it.getHostName().equals(hostData.getHostName())){
+                            dataList.remove(it);
+                            break;
+                        }
+                    }
+                    SPUtils.setDataList(this, "hostList", dataList);
+                    Intent i = new Intent();
+                    i.putExtra("result", getString(R.string.delete_successful));
+                    setResult(3, i);
+                    finish();
+                }
+                break;
         }
         return super.onOptionsItemSelected(item);
     }

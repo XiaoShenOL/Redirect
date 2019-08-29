@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.HostSettingActivity"
+    tools:context=".ui.fragment.RulesFragment"
     android:id="@+id/coordinatorLayout">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

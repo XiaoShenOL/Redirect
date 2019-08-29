@@ -2,6 +2,7 @@ package com.lmgy.redirect.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,10 +26,15 @@ import java.util.List;
 /*
  * Created by lmgy on 15/8/2019
  */
-public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.HostSettingViewHolder> {
+public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.HostSettingViewHolder> implements MultiSelectMode<String> {
+
     private Context mContext;
     private List<String> mSelectedIds;
     private AsyncListDiffer<HostData> mDiffer;
+//    private List<HostData> hostDataList;
+//    private final OnListInteractionListener mListener;
+
+
     private DiffUtil.ItemCallback<HostData> diffCallback = new DiffUtil.ItemCallback<HostData>() {
         @Override
         public boolean areItemsTheSame(@NonNull HostData oldItem, @NonNull HostData newItem) {
@@ -37,7 +43,7 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
 
         @Override
         public boolean areContentsTheSame(@NonNull HostData oldItem, @NonNull HostData newItem) {
-            return oldItem.getHostName().equals(newItem.getHostName()) && oldItem.getIpAddress().equals(newItem.getIpAddress());
+            return oldItem.getHostName().equals(newItem.getHostName()) && oldItem.getIpAddress().equals(newItem.getIpAddress()) && oldItem.getType() == newItem.getType();
         }
     };
 
@@ -45,23 +51,34 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
         this.mContext = context;
         mDiffer = new AsyncListDiffer<>(this, diffCallback);
         mSelectedIds = new ArrayList<>();
-        mDiffer.submitList(hostDataList);
+        Log.e("asd", "HostSettingAdapter = " + hostDataList.size());
+        setHostDataList(hostDataList);
     }
 
     public void setHostDataList(List<HostData> mHostDataList) {
+        Log.e("asd", "setHostDataList");
         mDiffer.submitList(mHostDataList);
     }
 
     @NotNull
     @Override
     public HostSettingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        Log.e("asd", "onCreateViewHolder");
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.item_list, parent, false);
         return new HostSettingViewHolder(view);
     }
 
+    public interface OnListInteractionListener {
+
+        void onItemClick(HostData item);
+
+        void onItemLongClick();
+    }
+
     @Override
     public void onBindViewHolder(HostSettingViewHolder holder, int position) {
+        Log.e("asd", "onBindViewHolder");
         holder.setData(getItem(position), position);
     }
 
@@ -79,6 +96,38 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
         notifyDataSetChanged();
     }
 
+    @NotNull
+    @Override
+    public List<String> getSelectedItemsId() {
+        return mSelectedIds;
+    }
+
+
+    @Override
+    public void addSelectedItemId(String selectedItemId) {
+        mSelectedIds.add(selectedItemId);
+    }
+
+    @Override
+    public void removeSelectedItemId(String selectedItemId) {
+        mSelectedIds.remove(selectedItemId);
+    }
+
+    @Override
+    public void removeAllSelected() {
+        mSelectedIds.clear();
+    }
+
+    @Override
+    public int getSelectedItemsCount() {
+        return mSelectedIds.size();
+    }
+
+    @Override
+    public boolean isSomethingSelected() {
+        return mDiffer.getCurrentList().size() == mSelectedIds.size();
+    }
+
     class HostSettingViewHolder extends RecyclerView.ViewHolder {
         private TextView title;
         private FrameLayout rootView;
@@ -89,7 +138,21 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
             rootView = itemView.findViewById(R.id.root_view);
         }
 
-        public void setData(HostData hostData, int position) {
+        private void setData(final HostData hostData, int position) {
+            rootView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+//                    mListener.onItemClick(hostData);
+                }
+            });
+
+            rootView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+//                    mListener.onItemLongClick();
+                    return true;
+                }
+            });
             String text = hostData.getIpAddress()
                     + "   " + hostData.getHostName()
                     + "   " + hostData.getRemark();
