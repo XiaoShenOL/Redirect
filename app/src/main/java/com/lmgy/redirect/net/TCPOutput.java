@@ -62,21 +62,23 @@ public class TCPOutput implements Runnable {
                 String ipAndPort = destinationAddress.getHostAddress() + ":" +
                         destinationPort + ":" + sourcePort;
                 TCB tcb = TCB.getTCB(ipAndPort);
-                if (tcb == null)
+                if (tcb == null) {
                     initializeConnection(ipAndPort, destinationAddress, destinationPort,
                             currentPacket, tcpHeader, responseBuffer);
-                else if (tcpHeader.isSYN())
+                } else if (tcpHeader.isSYN()) {
                     processDuplicateSYN(tcb, tcpHeader, responseBuffer);
-                else if (tcpHeader.isRST())
+                } else if (tcpHeader.isRST()) {
                     closeCleanly(tcb, responseBuffer);
-                else if (tcpHeader.isFIN())
+                } else if (tcpHeader.isFIN()) {
                     processFIN(tcb, tcpHeader, responseBuffer);
-                else if (tcpHeader.isACK())
+                } else if (tcpHeader.isACK()) {
                     processACK(tcb, tcpHeader, payloadBuffer, responseBuffer);
+                }
 
                 // XXX: cleanup later
-                if (responseBuffer.position() == 0)
+                if (responseBuffer.position() == 0) {
                     ByteBufferPool.release(responseBuffer);
+                }
                 ByteBufferPool.release(payloadBuffer);
             }
         } catch (InterruptedException e) {
@@ -172,7 +174,9 @@ public class TCPOutput implements Runnable {
                 return;
             }
 
-            if (payloadSize == 0) return; // Empty ACK, ignore
+            if (payloadSize == 0) {
+                return; // Empty ACK, ignore
+            }
 
             if (!tcb.waitingForNetworkData) {
                 selector.wakeup();
@@ -182,8 +186,9 @@ public class TCPOutput implements Runnable {
 
             // Forward to remote server
             try {
-                while (payloadBuffer.hasRemaining())
+                while (payloadBuffer.hasRemaining()) {
                     outputChannel.write(payloadBuffer);
+                }
             } catch (IOException e) {
                 Log.e(TAG, "Network write error: " + tcb.ipAndPort, e);
                 sendRST(tcb, payloadSize, responseBuffer);

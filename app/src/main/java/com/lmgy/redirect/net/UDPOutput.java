@@ -92,8 +92,9 @@ public class UDPOutput implements Runnable {
 
                 try {
                     ByteBuffer payloadBuffer = currentPacket.backingBuffer;
-                    while (payloadBuffer.hasRemaining())
+                    while (payloadBuffer.hasRemaining()) {
                         outputChannel.write(payloadBuffer);
+                    }
                 } catch (IOException e) {
                     Log.e(TAG, "Network write error: " + ipAndPort, e);
                     channelCache.remove(ipAndPort);

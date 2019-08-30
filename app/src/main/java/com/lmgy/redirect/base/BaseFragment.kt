@@ -25,6 +25,7 @@ abstract class BaseFragment : Fragment() {
         toolbar = activity?.findViewById(R.id.toolbar)
         toolbar!!.menu.clear()
         checkStatus()
+        initData()
     }
 
     override fun onDestroy() {
@@ -34,5 +35,6 @@ abstract class BaseFragment : Fragment() {
         menu = null
     }
 
+    abstract fun initData()
     abstract fun checkStatus()
 }

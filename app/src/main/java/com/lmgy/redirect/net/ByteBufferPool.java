@@ -12,8 +12,10 @@ public class ByteBufferPool {
 
     public static ByteBuffer acquire() {
         ByteBuffer buffer = pool.poll();
-        if (buffer == null)
-            buffer = ByteBuffer.allocateDirect(BUFFER_SIZE); // Using DirectBuffer for zero-copy
+        if (buffer == null) {
+            // Using DirectBuffer for zero-copy
+            buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
+        }
         return buffer;
     }
 

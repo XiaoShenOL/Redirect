@@ -59,8 +59,11 @@ public class Packet {
     public String toString() {
         final StringBuilder sb = new StringBuilder("Packet{");
         sb.append("IpHeader=").append(ipHeader);
-        if (isTCP) sb.append(", tcpHeader=").append(tcpHeader);
-        else if (isUDP) sb.append(", udpHeader=").append(udpHeader);
+        if (isTCP) {
+            sb.append(", tcpHeader=").append(tcpHeader);
+        } else if (isUDP) {
+            sb.append(", udpHeader=").append(udpHeader);
+        }
         sb.append(", payloadSize=").append(backingBuffer.limit() - backingBuffer.position());
         sb.append('}');
         return sb.toString();
@@ -127,10 +130,11 @@ public class Packet {
 
     private void fillHeader(ByteBuffer buffer) {
         ipHeader.fillHeader(buffer);
-        if (isUDP)
+        if (isUDP) {
             udpHeader.fillHeader(buffer);
-        else if (isTCP)
+        } else if (isTCP) {
             tcpHeader.fillHeader(buffer);
+        }
     }
 
     private void checksum(int payloadSize) {
@@ -181,15 +185,20 @@ public class Packet {
             sum += BitUtils.getUnsignedShort(buffer.getShort());
             length -= 2;
         }
-        if (length > 0)
+        if (length > 0) {
             sum += BitUtils.getUnsignedByte(buffer.get()) << 8;
+        }
 
-        while (sum >> 16 > 0)
+        while (sum >> 16 > 0) {
             sum = (sum & 0xFFFF) + (sum >> 16);
+        }
 
         sum = ~sum;
-        if (isUDP()) udpHeader.checksum = sum;
-        else tcpHeader.checksum = sum;
+        if (isUDP()) {
+            udpHeader.checksum = sum;
+        } else {
+            tcpHeader.checksum = sum;
+        }
         backingBuffer.putShort(IP_HEADER_SIZE + pos, (short) sum);
     }
 
@@ -246,6 +255,7 @@ public class Packet {
             //this.optionsAndPadding = buffer.getInt();
         }
 
+        @Override
         public void fillHeader(ByteBuffer buffer) {
             buffer.put((byte) (this.version << 4 | this.IHL));
             buffer.put((byte) this.typeOfService);
@@ -277,8 +287,9 @@ public class Packet {
                 sum += BitUtils.getUnsignedShort(buffer.getShort());
                 ipLength -= 2;
             }
-            while (sum >> 16 > 0)
+            while (sum >> 16 > 0) {
                 sum = (sum & 0xFFFF) + (sum >> 16);
+            }
 
             sum = ~sum;
             headerChecksum = sum;
@@ -329,6 +340,7 @@ public class Packet {
             this.totalLength = totalLength;
         }
 
+        @Override
         public void fillHeader(ByteBuffer buffer) {
             buffer.putInt((int) this.versionTrafficFlowLabel);
             buffer.putShort((short) this.totalLength);
@@ -450,12 +462,24 @@ public class Packet {
             sb.append(", window=").append(window);
             sb.append(", checksum=").append(checksum);
             sb.append(", flags=");
-            if (isFIN()) sb.append(" FIN");
-            if (isSYN()) sb.append(" SYN");
-            if (isRST()) sb.append(" RST");
-            if (isPSH()) sb.append(" PSH");
-            if (isACK()) sb.append(" ACK");
-            if (isURG()) sb.append(" URG");
+            if (isFIN()) {
+                sb.append(" FIN");
+            }
+            if (isSYN()) {
+                sb.append(" SYN");
+            }
+            if (isRST()) {
+                sb.append(" RST");
+            }
+            if (isPSH()) {
+                sb.append(" PSH");
+            }
+            if (isACK()) {
+                sb.append(" ACK");
+            }
+            if (isURG()) {
+                sb.append(" URG");
+            }
             sb.append('}');
             return sb.toString();
         }

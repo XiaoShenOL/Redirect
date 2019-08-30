@@ -43,10 +43,11 @@ public class TCPInput implements Runnable {
                 while (keyIterator.hasNext() && !Thread.interrupted()) {
                     SelectionKey key = keyIterator.next();
                     if (key.isValid()) {
-                        if (key.isConnectable())
+                        if (key.isConnectable()) {
                             processConnect(key, keyIterator);
-                        else if (key.isReadable())
+                        } else if (key.isReadable()) {
                             processInput(key, keyIterator);
+                        }
                     }
                 }
             }

@@ -23,17 +23,15 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
- * Created by lmgy on 15/8/2019
+/**
+ * @author lmgy
+ * @date 2019/8/15
  */
-public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.HostSettingViewHolder> implements MultiSelectMode<String> {
+public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.HostSettingViewHolder> {
 
     private Context mContext;
     private List<String> mSelectedIds;
     private AsyncListDiffer<HostData> mDiffer;
-//    private List<HostData> hostDataList;
-//    private final OnListInteractionListener mListener;
-
 
     private DiffUtil.ItemCallback<HostData> diffCallback = new DiffUtil.ItemCallback<HostData>() {
         @Override
@@ -51,34 +49,23 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
         this.mContext = context;
         mDiffer = new AsyncListDiffer<>(this, diffCallback);
         mSelectedIds = new ArrayList<>();
-        Log.e("asd", "HostSettingAdapter = " + hostDataList.size());
         setHostDataList(hostDataList);
     }
 
     public void setHostDataList(List<HostData> mHostDataList) {
-        Log.e("asd", "setHostDataList");
         mDiffer.submitList(mHostDataList);
     }
 
     @NotNull
     @Override
     public HostSettingViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.e("asd", "onCreateViewHolder");
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.item_list, parent, false);
         return new HostSettingViewHolder(view);
     }
 
-    public interface OnListInteractionListener {
-
-        void onItemClick(HostData item);
-
-        void onItemLongClick();
-    }
-
     @Override
     public void onBindViewHolder(HostSettingViewHolder holder, int position) {
-        Log.e("asd", "onBindViewHolder");
         holder.setData(getItem(position), position);
     }
 
@@ -96,38 +83,6 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
         notifyDataSetChanged();
     }
 
-    @NotNull
-    @Override
-    public List<String> getSelectedItemsId() {
-        return mSelectedIds;
-    }
-
-
-    @Override
-    public void addSelectedItemId(String selectedItemId) {
-        mSelectedIds.add(selectedItemId);
-    }
-
-    @Override
-    public void removeSelectedItemId(String selectedItemId) {
-        mSelectedIds.remove(selectedItemId);
-    }
-
-    @Override
-    public void removeAllSelected() {
-        mSelectedIds.clear();
-    }
-
-    @Override
-    public int getSelectedItemsCount() {
-        return mSelectedIds.size();
-    }
-
-    @Override
-    public boolean isSomethingSelected() {
-        return mDiffer.getCurrentList().size() == mSelectedIds.size();
-    }
-
     class HostSettingViewHolder extends RecyclerView.ViewHolder {
         private TextView title;
         private FrameLayout rootView;
@@ -139,25 +94,12 @@ public class HostSettingAdapter extends RecyclerView.Adapter<HostSettingAdapter.
         }
 
         private void setData(final HostData hostData, int position) {
-            rootView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-//                    mListener.onItemClick(hostData);
-                }
-            });
-
-            rootView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-//                    mListener.onItemLongClick();
-                    return true;
-                }
-            });
             String text = hostData.getIpAddress()
                     + "   " + hostData.getHostName()
                     + "   " + hostData.getRemark();
-            if (!hostData.getType())
+            if (!hostData.getType()) {
                 text = "#" + text;
+            }
             title.setText(text);
             if (mSelectedIds.contains(String.valueOf(position))) {
                 rootView.setForeground(new ColorDrawable(ContextCompat.getColor(mContext, R.color.colorControlActivated)));

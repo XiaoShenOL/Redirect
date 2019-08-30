@@ -46,7 +46,6 @@ public class UDPInput implements Runnable {
                         ByteBuffer receiveBuffer = ByteBufferPool.acquire();
                         // Leave space for the header
 
-
                         DatagramChannel inputChannel = (DatagramChannel) key.channel();
                         Packet referencePacket = (Packet) key.attachment();
                         receiveBuffer.position(referencePacket.IP_TRAN_SIZE);

@@ -18,10 +18,25 @@ public class TCB {
 
     // TCP has more states, but we need only these
     public enum TCBStatus {
+        /*
+        请求连接
+         */
         SYN_SENT,
+        /*
+        接收到SYN请求
+         */
         SYN_RECEIVED,
+        /*
+        经过三次握手，连接已经建立
+         */
         ESTABLISHED,
+        /*
+        被动关闭的一方，在接收到FIN后，由ESTABLISHED状态进入此状态
+         */
         CLOSE_WAIT,
+        /*
+        被动关闭的一方，发起关闭请求，由CLOSE_WAIT状态，进入此状态。在接收到ACK后，会进入CLOSED状态
+         */
         LAST_ACK,
     }
 
@@ -31,7 +46,7 @@ public class TCB {
     public boolean waitingForNetworkData;
     public SelectionKey selectionKey;
 
-    private static final int MAX_CACHE_SIZE = 50; // XXX: Is this ideal?
+    private static final int MAX_CACHE_SIZE = 50;
     private static LRUCache<String, TCB> tcbCache =
             new LRUCache<>(MAX_CACHE_SIZE, new LRUCache.CleanupCallback<String, TCB>() {
                 @Override

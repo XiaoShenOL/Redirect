@@ -1,11 +1,8 @@
 package com.lmgy.redirect.net;
 
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
 import android.net.VpnService;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -15,7 +12,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.DnsBean;
 import com.lmgy.redirect.bean.HostData;
-import com.lmgy.redirect.receiver.NetworkReceiver;
 import com.lmgy.redirect.utils.DnsUtils;
 import com.lmgy.redirect.utils.SPUtils;
 
@@ -32,15 +28,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/*
+/**
+ * @author lm
  * Created by lmgy on 15/8/2019
  */
 public class LocalVpnService extends VpnService {
     private static final String TAG = "LocalVpnService";
-    private static final String VPN_ADDRESS = "10.1.10.1";//本地代理服务器IP地址，必要，建议用A类IP地址，防止冲突
+    private static final String VPN_ADDRESS = "10.1.10.1";
+    //本地代理服务器IP地址，必要，建议用A类IP地址，防止冲突
+
     private static final String VPN_ADDRESS6 = "fe80:49b1:7e4f:def2:e91f:95bf:fbb6:1111";
-    //    private static final String VPN_ROUTE = "0.0.0.0"; // Intercept everything
+
+//    private static final String VPN_ROUTE = "0.0.0.0"; // Intercept everything
 //    private static final String VPN_ROUTE6 = "::"; // Intercept everything
+
     private static final int VPN_ADDRESS_MASK = 32;
     private static final int VPN_ADDRESS6_MASK = 128;
     private static final int VPN_DNS4_MASK = 32;
@@ -65,18 +66,16 @@ public class LocalVpnService extends VpnService {
 
     private Selector udpSelector;
     private Selector tcpSelector;
-    private NetworkReceiver netStateReceiver;
 
     @Override
     public void onCreate() {
-        registerNetReceiver();
         super.onCreate();
         setupDNS();
         setupHostRules();
         setupVPN();
         if (vpnInterface == null) {
             Log.d(TAG, "unknown error");
-            stopVService();
+            stopVpnService();
             return;
         }
         isRunning = true;
@@ -99,7 +98,7 @@ public class LocalVpnService extends VpnService {
             // TODO: Here and elsewhere, we should explicitly notify the user of any errors
             // and suggest that they stop the service, since we can't do it ourselves
             Log.e(TAG, "Error starting service", e);
-            stopVService();
+            stopVpnService();
         }
     }
 
@@ -154,27 +153,10 @@ public class LocalVpnService extends VpnService {
         }
     }
 
-    private void registerNetReceiver() {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        netStateReceiver = new NetworkReceiver();
-        registerReceiver(netStateReceiver, filter);
-
-    }
-
-    private void unregisterNetReceiver() {
-        if (netStateReceiver != null) {
-            unregisterReceiver(netStateReceiver);
-            netStateReceiver = null;
-        }
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_DISCONNECT.equals(intent.getAction())) {
-            stopVService();
+            stopVpnService();
             return START_NOT_STICKY;
         }
         return START_STICKY;
@@ -184,10 +166,13 @@ public class LocalVpnService extends VpnService {
         return isRunning;
     }
 
-    private void stopVService() {
-        if (threadHandleHosts != null) threadHandleHosts.interrupt();
-        unregisterNetReceiver();
-        if (executorService != null) executorService.shutdownNow();
+    private void stopVpnService() {
+        if (threadHandleHosts != null) {
+            threadHandleHosts.interrupt();
+        }
+        if (executorService != null) {
+            executorService.shutdown();
+        }
         isRunning = false;
         cleanup();
         stopSelf();
@@ -196,13 +181,13 @@ public class LocalVpnService extends VpnService {
 
     @Override
     public void onRevoke() {
-        stopVService();
+        stopVpnService();
         super.onRevoke();
     }
 
     @Override
     public void onDestroy() {
-        stopVService();
+        stopVpnService();
         super.onDestroy();
     }
 
@@ -219,7 +204,7 @@ public class LocalVpnService extends VpnService {
             try {
                 resource.close();
             } catch (Exception e) {
-                Log.e(TAG, e.toString(), e);
+                e.printStackTrace();
             }
         }
     }
@@ -254,10 +239,11 @@ public class LocalVpnService extends VpnService {
                 boolean dataSent = true;
                 boolean dataReceived;
                 while (!Thread.interrupted()) {
-                    if (dataSent)
+                    if (dataSent) {
                         bufferToNetwork = ByteBufferPool.acquire();
-                    else
+                    } else {
                         bufferToNetwork.clear();
+                    }
 
                     // TODO: Block when not connected
                     int readBytes = vpnInput.read(bufferToNetwork);
@@ -279,13 +265,14 @@ public class LocalVpnService extends VpnService {
                     ByteBuffer bufferFromNetwork = networkToDeviceQueue.poll();
                     if (bufferFromNetwork != null) {
                         bufferFromNetwork.flip();
-                        while (bufferFromNetwork.hasRemaining())
+                        while (bufferFromNetwork.hasRemaining()) {
                             try {
                                 vpnOutput.write(bufferFromNetwork);
                             } catch (Exception e) {
                                 Log.e(TAG, e.toString(), e);
                                 break;
                             }
+                        }
                         dataReceived = true;
                         ByteBufferPool.release(bufferFromNetwork);
                     } else {
@@ -294,8 +281,9 @@ public class LocalVpnService extends VpnService {
 
                     // TODO: Sleep-looping is not very battery-friendly, consider blocking instead
                     // Confirm if throughput with ConcurrentQueue is really higher compared to BlockingQueue
-                    if (!dataSent && !dataReceived)
+                    if (!dataSent && !dataReceived) {
                         Thread.sleep(11);
+                    }
                 }
             } catch (InterruptedException e) {
                 Log.i(TAG, "Stopping");

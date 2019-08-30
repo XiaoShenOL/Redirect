@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -19,11 +18,20 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.lmgy.redirect.BuildConfig;
 import com.lmgy.redirect.R;
+import com.lmgy.redirect.event.MessageEvent;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+/**
+ * @author lmgy
+ * @date 2019/8/14
+ */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-
 
     private Toolbar mToolbar;
     private NavigationView mNavView;
@@ -32,18 +40,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Fragment fragment;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        EventBus.getDefault().register(this);
 
         initView();
         setSupportActionBar(mToolbar);
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_rules, R.id.nav_dns,
-                R.id.nav_star, R.id.nav_share ,R.id.nav_github,
+                R.id.nav_star, R.id.nav_share, R.id.nav_github,
                 R.id.nav_about)
                 .setDrawerLayout(mDrawerLayout)
                 .build();
@@ -60,6 +69,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    private void initView() {
+        mToolbar = findViewById(R.id.toolbar);
+        mNavView = findViewById(R.id.nav_view);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+    }
 
     @Override
     public void onBackPressed() {
@@ -79,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.nav_home:
                 NavHostFragment.findNavController(fragment).navigate(R.id.nav_home);
                 break;
@@ -118,14 +138,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             default:
                 break;
         }
+
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    private void initView(){
-        mToolbar = findViewById(R.id.toolbar);
-        mNavView = findViewById(R.id.nav_view);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void eventBus(MessageEvent event) {
+        if (event.getType() == 1 || event.getType() == 2) {
+            Snackbar.make(mDrawerLayout, event.getMessage(), Snackbar.LENGTH_SHORT).show();
+        }
     }
 
 }

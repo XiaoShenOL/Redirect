@@ -24,8 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/*
- * Created by lmgy on 14/8/2019
+/**
+ * @author lmgy
+ * @date 2019/8/14
  */
 public class SPUtils {
     private static final String SP_NAME = "redirect_sp";
@@ -314,12 +315,12 @@ public class SPUtils {
      *
      * @param context 上下文
      * @param key     储存的key
-     * @param clsV    解析类型
+     * @param cls    解析类型
      * @return Map集合
      */
-    public static <V> Map<String, V> getHashMapData(Context context, String key, Class<V> clsV) {
+    public static <V> Map<String, V> getHashMapData(Context context, String key, Class<V> cls) {
         SharedPreferences sp = context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
-        Map<String, V> map = new HashMap<>();
+        Map<String, V> map = new HashMap<>(16);
         String strJson = sp.getString(key, "");
         Gson gson = new Gson();
         JsonObject obj = new JsonParser().parse(strJson).getAsJsonObject();
@@ -327,7 +328,7 @@ public class SPUtils {
         for (Map.Entry<String, JsonElement> entry : entrySet) {
             String entryKey = entry.getKey();
             JsonObject value = (JsonObject) entry.getValue();
-            map.put(entryKey, gson.fromJson(value, clsV));
+            map.put(entryKey, gson.fromJson(value, cls));
         }
 
         return map;

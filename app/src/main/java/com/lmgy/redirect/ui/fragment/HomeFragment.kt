@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.material.snackbar.Snackbar
 import com.kyleduo.switchbutton.SwitchButton
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
@@ -19,29 +18,45 @@ import com.lmgy.redirect.bean.HostData
 import com.lmgy.redirect.net.LocalVpnService
 import com.lmgy.redirect.utils.SPUtils
 
-
+/**
+ * @author lmgy
+ * @date 2019/8/29
+ */
 class HomeFragment : BaseFragment() {
 
     private var waitingForVPNStart: Boolean = false
-
     private lateinit var mContext: Context
     private lateinit var mBtnVpn: SwitchButton
-
-    companion object {
-        const val VPN_REQUEST_CODE: Int = 0x0F
-        const val DNS_REQUEST_CODE: Int = 0
+    private val vpnStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (LocalVpnService.BROADCAST_VPN_STATE == intent.action && intent.getBooleanExtra("running", false)) {
+                waitingForVPNStart = false
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mContext = requireContext()
+        mContext = this.context ?: requireContext()
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        initView(view)
+        return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initData()
     }
 
     private fun initView(view: View) {
         mBtnVpn = view.findViewById(R.id.btn_vpn)
     }
 
-    private fun initData() {
+    override fun initData() {
         mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (checkHost() == -1) {
@@ -73,28 +88,8 @@ class HomeFragment : BaseFragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
-        initView(view)
-        return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initData()
-    }
-
     private fun setButton(enable: Boolean) {
         mBtnVpn.isChecked = !enable
-    }
-
-    private val vpnStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (LocalVpnService.BROADCAST_VPN_STATE == intent.action && intent.getBooleanExtra("running", false)) {
-                waitingForVPNStart = false
-            }
-        }
     }
 
     private fun checkHost(): Int {
@@ -137,8 +132,10 @@ class HomeFragment : BaseFragment() {
             waitingForVPNStart = true
             mContext.startService(Intent(mContext, LocalVpnService::class.java).setAction(LocalVpnService.ACTION_CONNECT))
             setButton(false)
-        } else if (requestCode == DNS_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            Snackbar.make(view!!, data!!.getStringExtra("result")!!, Snackbar.LENGTH_SHORT).show()
         }
+    }
+
+    companion object {
+        const val VPN_REQUEST_CODE: Int = 0x0F
     }
 }

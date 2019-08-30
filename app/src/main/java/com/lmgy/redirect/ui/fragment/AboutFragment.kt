@@ -13,7 +13,10 @@ import androidx.fragment.app.FragmentActivity
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
 
-
+/**
+ * @author lmgy
+ * @date 2019/8/29
+ */
 class AboutFragment : BaseFragment() {
 
     private lateinit var mActivity: FragmentActivity
@@ -24,16 +27,10 @@ class AboutFragment : BaseFragment() {
         mActivity = this.activity ?: requireActivity()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_about, container, false)
         initView(view)
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initData()
     }
 
     private fun initView(view: View) {
@@ -41,7 +38,7 @@ class AboutFragment : BaseFragment() {
     }
 
     @SuppressLint("JavascriptInterface", "SetJavaScriptEnabled")
-    private fun initData() {
+    override fun initData() {
         mWvAbout.settings.javaScriptEnabled = true
         mWvAbout.setBackgroundColor(0)
         mWvAbout.addJavascriptInterface(this, "JavascriptInterface")

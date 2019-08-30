@@ -1,7 +1,6 @@
 package com.lmgy.redirect.ui.fragment
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,27 +9,27 @@ import android.widget.AdapterView
 import android.widget.Button
 import android.widget.Spinner
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.Navigation
-import com.google.android.material.snackbar.Snackbar
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.bean.DnsBean
+import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.net.LocalVpnService
 import com.lmgy.redirect.utils.SPUtils
+import org.greenrobot.eventbus.EventBus
 
-
-class DnsFragment : BaseFragment(){
+/**
+ * @author lmgy
+ * @date 2019/8/29
+ */
+class DnsFragment : BaseFragment() {
 
     private lateinit var spinner: Spinner
     private lateinit var btnSave: Button
-    private lateinit var coordinatorLayout: CoordinatorLayout
     private lateinit var ipv4: AppCompatEditText
     private lateinit var ipv6: AppCompatEditText
     private lateinit var data: List<DnsBean>
     private lateinit var mContext: Context
-    private lateinit var mActivity: FragmentActivity
 
     private var position = -1
 
@@ -38,7 +37,6 @@ class DnsFragment : BaseFragment(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
-        mActivity = this.activity ?: requireActivity()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -53,8 +51,7 @@ class DnsFragment : BaseFragment(){
         initData()
     }
 
-
-    private fun initData(){
+    override fun initData() {
         data = getList()
         if (data.isNotEmpty()) {
             spinner.setSelection(data[0].id)
@@ -91,29 +88,25 @@ class DnsFragment : BaseFragment(){
             val tempIpv6 = (ipv6.text?.toString() ?: "").trim()
 
             if (tempIpv4.isEmpty() || tempIpv6.isEmpty()) {
-                Snackbar.make(coordinatorLayout, getString(R.string.empty), Snackbar.LENGTH_SHORT).show()
+                EventBus.getDefault().post(MessageEvent(1, getString(R.string.empty)))
             } else {
                 val data: List<DnsBean> = listOf(DnsBean(position, tempIpv4, tempIpv6))
                 SPUtils.setDataList(mContext, "dnsList", data)
-                val intent = Intent()
                 if (LocalVpnService.isRunning()) {
-                    intent.putExtra("result", getString(R.string.save_successful_restart))
+                    EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
                 } else {
-                    intent.putExtra("result", getString(R.string.save_successful))
+                    EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful)))
                 }
-                mActivity.setResult(-1, intent)
                 Navigation.findNavController(view!!).popBackStack()
-//                fragmentManager?.popBackStack()
             }
         }
     }
 
     private fun getList(): List<DnsBean> = SPUtils.getDataList(mContext, "dnsList", DnsBean::class.java)
 
-    private fun initView(view: View){
+    private fun initView(view: View) {
         spinner = view.findViewById(R.id.spinner)
         btnSave = view.findViewById(R.id.btn_save)
-        coordinatorLayout = view.findViewById(R.id.coordinatorLayout)
         ipv4 = view.findViewById(R.id.ipv4)
         ipv6 = view.findViewById(R.id.ipv6)
     }

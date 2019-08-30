@@ -1,14 +1,16 @@
 package com.lmgy.redirect.ui.fragment
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,12 +20,18 @@ import com.lmgy.redirect.R
 import com.lmgy.redirect.adapter.HostSettingAdapter
 import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.bean.HostData
+import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.listener.RecyclerItemClickListener
-import com.lmgy.redirect.ui.activity.ChangeSettingActivity
 import com.lmgy.redirect.utils.SPUtils
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.util.*
 
-
+/**
+ * @author lmgy
+ * @date 2019/8/29
+ */
 class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
     private var isMultiSelect = false
@@ -39,18 +47,13 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
+        EventBus.getDefault().register(this)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_rules, container, false)
         initView(view)
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initData()
     }
 
 
@@ -85,8 +88,7 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                 mAdapter.setHostDataList(hostDataList)
             }
             R.id.action_add -> {
-                val intent = Intent(mContext, ChangeSettingActivity::class.java)
-                startActivityForResult(intent, 0)
+                NavHostFragment.findNavController(this).navigate(R.id.nav_edit)
             }
         }
         return true
@@ -109,8 +111,12 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        EventBus.getDefault().unregister(this)
+    }
 
-    private fun initData() {
+    override fun initData() {
         mAdapter = HostSettingAdapter(mContext, getList())
         mRv.layoutManager = LinearLayoutManager(mContext)
         mRv.adapter = mAdapter
@@ -123,16 +129,16 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                     isMultiSelect = true
                 }
                 multiSelect(position)
+
             }
 
             override fun onItemLongClick(view: View, position: Int) {
 
-                val intent = Intent(mContext, ChangeSettingActivity::class.java)
-                val mBundle = Bundle()
-                mBundle.putSerializable("hostData", getList()[position])
-                intent.putExtras(mBundle)
-                intent.putExtra("id", position)
-                startActivityForResult(intent, 0)
+                val bundle = Bundle()
+                bundle.putInt("id", position)
+                bundle.putSerializable("hostData", getList()[position])
+                Navigation.findNavController(view).navigate(R.id.nav_edit, bundle)
+
             }
         }))
 
@@ -166,6 +172,13 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         mSwipeRefreshLayout.setOnRefreshListener {
             mAdapter.setHostDataList(getList())
             mSwipeRefreshLayout.isRefreshing = false
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun eventBus(event: MessageEvent) {
+        if (event.type == 2) {
+            mAdapter.setHostDataList(getList())
         }
     }
 

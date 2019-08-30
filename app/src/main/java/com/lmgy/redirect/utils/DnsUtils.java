@@ -20,8 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-/*
- * Created by lmgy on 15/8/2019
+/**
+ * @author lmgy
+ * @date 2019/8/15
  */
 public class DnsUtils {
     private static final String TAG = "DnsUtils";
@@ -35,58 +36,62 @@ public class DnsUtils {
             return null;
         }
         try {
-            ByteBuffer packet_buffer = packet.backingBuffer;
-            packet_buffer.mark();
-            byte[] tmp_bytes = new byte[packet_buffer.remaining()];
-            packet_buffer.get(tmp_bytes);
-            packet_buffer.reset();
-            Message message = new Message(tmp_bytes);
+            ByteBuffer packetBuffer = packet.backingBuffer;
+            packetBuffer.mark();
+            byte[] tmpBytes = new byte[packetBuffer.remaining()];
+            packetBuffer.get(tmpBytes);
+            packetBuffer.reset();
+            Message message = new Message(tmpBytes);
             Record question = message.getQuestion();
             ConcurrentHashMap<String, String> DOMAINS_IP_MAPS;
             int type = question.getType();
-            if (type == Type.A)
+            if (type == Type.A) {
                 DOMAINS_IP_MAPS = DOMAINS_IP_MAPS4;
-            else if (type == Type.AAAA)
+            } else if (type == Type.AAAA) {
                 DOMAINS_IP_MAPS = DOMAINS_IP_MAPS6;
-            else return null;
-            Name query_domain = message.getQuestion().getName();
-            String query_string = query_domain.toString();
-            Log.d(TAG, "query: " + question.getType() + " :" + query_string);
-            if (!DOMAINS_IP_MAPS.containsKey(query_string)) {
-                query_string = "." + query_string;
+            } else {
+                return null;
+            }
+            Name queryDomain = message.getQuestion().getName();
+            String queryString = queryDomain.toString();
+            Log.d(TAG, "query: " + question.getType() + " :" + queryString);
+            if (!DOMAINS_IP_MAPS.containsKey(queryString)) {
+                queryString = "." + queryString;
                 int j = 0;
                 while (true) {
-                    int i = query_string.indexOf(".", j);
+                    int i = queryString.indexOf(".", j);
                     if (i == -1) {
                         return null;
                     }
-                    String str = query_string.substring(i);
+                    String str = queryString.substring(i);
 
                     if (".".equals(str) || "".equals(str)) {
                         return null;
                     }
                     if (DOMAINS_IP_MAPS.containsKey(str)) {
-                        query_string = str;
+                        queryString = str;
                         break;
                     }
                     j = i + 1;
                 }
             }
-            InetAddress address = Address.getByAddress(DOMAINS_IP_MAPS.get(query_string));
+            InetAddress address = Address.getByAddress(DOMAINS_IP_MAPS.get(queryString));
             Record record;
-            if (type == Type.A) record = new ARecord(query_domain, 1, 86400, address);
-            else record = new AAAARecord(query_domain, 1, 86400, address);
+            if (type == Type.A) {
+                record = new ARecord(queryDomain, 1, 86400, address);
+            } else {
+                record = new AAAARecord(queryDomain, 1, 86400, address);
+            }
             message.addRecord(record, 1);
             message.getHeader().setFlag(Flags.QR);
-            packet_buffer.limit(packet_buffer.capacity());
-            packet_buffer.put(message.toWire());
-            packet_buffer.limit(packet_buffer.position());
-            packet_buffer.reset();
+            packetBuffer.limit(packetBuffer.capacity());
+            packetBuffer.put(message.toWire());
+            packetBuffer.limit(packetBuffer.position());
+            packetBuffer.reset();
             packet.swapSourceAndDestination();
-            packet.updateUDPBuffer(packet_buffer, packet_buffer.remaining());
-            packet_buffer.position(packet_buffer.limit());
-            Log.d(TAG, "hit: " + question.getType() + " :" + query_domain.toString() + " :" + address.getHostName());
-            return packet_buffer;
+            packet.updateUDPBuffer(packetBuffer, packetBuffer.remaining());
+            packetBuffer.position(packetBuffer.limit());
+            return packetBuffer;
         } catch (Exception e) {
             Log.d(TAG, "dns hook error", e);
             return null;
@@ -104,7 +109,9 @@ public class DnsUtils {
 
             while (!Thread.interrupted() && savedHostDataIterator.hasNext()) {
                 savedHostData = savedHostDataIterator.next();
-                if (!savedHostData.getType()) continue;
+                if (!savedHostData.getType()) {
+                    continue;
+                }
                 String ip = savedHostData.getIpAddress().trim();
                 String hostName = savedHostData.getHostName().trim();
                 Log.e(TAG, "handle_hosts: " + ip + " - " + hostName);
