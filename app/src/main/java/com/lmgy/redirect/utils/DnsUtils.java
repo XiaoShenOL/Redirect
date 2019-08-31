@@ -2,7 +2,7 @@ package com.lmgy.redirect.utils;
 
 import android.util.Log;
 
-import com.lmgy.redirect.bean.HostData;
+import com.lmgy.redirect.db.data.HostData;
 import com.lmgy.redirect.net.Packet;
 
 import org.xbill.DNS.AAAARecord;

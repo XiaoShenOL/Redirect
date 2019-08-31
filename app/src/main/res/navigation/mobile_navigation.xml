@@ -10,13 +10,29 @@
         android:name="com.lmgy.redirect.ui.fragment.HomeFragment"
         android:label="@string/nav_home"
         tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_home_to_nav_rules"
+            app:destination="@id/nav_rules" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_dns"
+            app:destination="@id/nav_dns" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_about"
+            app:destination="@id/nav_about" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_edit"
+            app:destination="@id/nav_edit" />
     </fragment>
 
     <fragment
         android:id="@+id/nav_rules"
         android:name="com.lmgy.redirect.ui.fragment.RulesFragment"
         android:label="@string/nav_rules"
-        tools:layout="@layout/fragment_rules" />
+        tools:layout="@layout/fragment_rules" >
+        <action
+            android:id="@+id/action_nav_rules_to_nav_edit"
+            app:destination="@id/nav_edit" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_dns"
@@ -37,7 +53,7 @@
         tools:layout="@layout/fragment_change_setting" >
         <argument
             android:name="hostData"
-            app:argType="com.lmgy.redirect.bean.HostData"
+            app:argType="com.lmgy.redirect.db.data.HostData"
             app:nullable="true"
             android:defaultValue="@null" />
         <argument

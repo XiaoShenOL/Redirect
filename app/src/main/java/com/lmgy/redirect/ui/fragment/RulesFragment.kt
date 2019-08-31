@@ -7,7 +7,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
@@ -19,10 +18,10 @@ import com.google.android.material.snackbar.Snackbar
 import com.lmgy.redirect.R
 import com.lmgy.redirect.adapter.HostSettingAdapter
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.bean.HostData
+import com.lmgy.redirect.db.RepositoryProvider
+import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.listener.RecyclerItemClickListener
-import com.lmgy.redirect.utils.SPUtils
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -58,7 +57,8 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
 
     private fun getList(): MutableList<HostData> {
-        val dataList = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
+        val dataList = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
+//        val dataList = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
         if (dataList.size == 0) {
             mRv.visibility = View.GONE
             mTvEmpty.visibility = View.VISIBLE
@@ -84,7 +84,8 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                     val hostData = hostDataList[Integer.parseInt(it)]
                     hostData.type = !hostData.type
                 }
-                SPUtils.setDataList(mContext, "hostList", hostDataList)
+                RepositoryProvider.providerHostRepository(mContext).updateAll(hostDataList)
+//                SPUtils.setDataList(mContext, "hostList", hostDataList)
                 mAdapter.setHostDataList(hostDataList)
             }
             R.id.action_add -> {
@@ -129,15 +130,14 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                     isMultiSelect = true
                 }
                 multiSelect(position)
-
             }
 
             override fun onItemLongClick(view: View, position: Int) {
 
-                val bundle = Bundle()
-                bundle.putInt("id", position)
-                bundle.putSerializable("hostData", getList()[position])
-                Navigation.findNavController(view).navigate(R.id.nav_edit, bundle)
+                val action = RulesFragmentDirections.actionNavRulesToNavEdit()
+                        .setHostData(getList()[position])
+                        .setId(position)
+                Navigation.findNavController(view).navigate(action)
 
             }
         }))
@@ -156,11 +156,14 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                 val dataList = getList()
                 val copyDataList = ArrayList<HostData>(dataList)
                 dataList.removeAt(position)
-                SPUtils.setDataList<HostData>(context, "hostList", dataList)
+
+                RepositoryProvider.providerHostRepository(mContext).updateAll(dataList)
+//                SPUtils.setDataList<HostData>(context, "hostList", dataList)
                 mAdapter.setHostDataList(dataList)
                 Snackbar.make(view!!, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
-                            SPUtils.setDataList<HostData>(context, "hostList", copyDataList)
+                            RepositoryProvider.providerHostRepository(mContext).updateAll(copyDataList)
+//                            SPUtils.setDataList<HostData>(context, "hostList", copyDataList)
                             mAdapter.setHostDataList(copyDataList)
                         }
                         .show()

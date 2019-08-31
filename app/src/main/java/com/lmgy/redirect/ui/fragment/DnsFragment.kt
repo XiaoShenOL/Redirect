@@ -15,7 +15,6 @@ import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.bean.DnsBean
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.net.LocalVpnService
-import com.lmgy.redirect.utils.SPUtils
 import org.greenrobot.eventbus.EventBus
 
 /**
@@ -91,7 +90,8 @@ class DnsFragment : BaseFragment() {
                 EventBus.getDefault().post(MessageEvent(1, getString(R.string.empty)))
             } else {
                 val data: List<DnsBean> = listOf(DnsBean(position, tempIpv4, tempIpv6))
-                SPUtils.setDataList(mContext, "dnsList", data)
+//                SPUtils.setDataList(mContext, "dnsList", data)
+                //TODO： 删掉注释
                 if (LocalVpnService.isRunning()) {
                     EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
                 } else {
@@ -102,7 +102,9 @@ class DnsFragment : BaseFragment() {
         }
     }
 
-    private fun getList(): List<DnsBean> = SPUtils.getDataList(mContext, "dnsList", DnsBean::class.java)
+//    private fun getList(): List<DnsBean> = SPUtils.getDataList(mContext, "dnsList", DnsBean::class.java)
+    private fun getList(): List<DnsBean> = mutableListOf(DnsBean(0, "8.8.8.8", "2001:4860:4860::8888"))
+
 
     private fun initView(view: View) {
         spinner = view.findViewById(R.id.spinner)

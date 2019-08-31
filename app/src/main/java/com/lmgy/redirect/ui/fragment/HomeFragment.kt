@@ -14,9 +14,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.kyleduo.switchbutton.SwitchButton
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.bean.HostData
+import com.lmgy.redirect.db.RepositoryProvider
 import com.lmgy.redirect.net.LocalVpnService
-import com.lmgy.redirect.utils.SPUtils
 
 /**
  * @author lmgy
@@ -93,7 +92,8 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkHost(): Int {
-        val list = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
+        val list = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
+//        val list = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
         return if (list.size == 0) {
             -1
         } else {

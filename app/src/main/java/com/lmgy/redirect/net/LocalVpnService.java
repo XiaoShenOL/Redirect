@@ -11,9 +11,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.DnsBean;
-import com.lmgy.redirect.bean.HostData;
+import com.lmgy.redirect.db.RepositoryProvider;
 import com.lmgy.redirect.utils.DnsUtils;
-import com.lmgy.redirect.utils.SPUtils;
 
 import java.io.Closeable;
 import java.io.FileDescriptor;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.Selector;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -103,7 +103,9 @@ public class LocalVpnService extends VpnService {
     }
 
     private void setupDNS() {
-        List<DnsBean> dnsBeanList = SPUtils.getDataList(this, "dnsList", DnsBean.class);
+//        List<DnsBean> dnsBeanList = SPUtils.getDataList(this, "dnsList", DnsBean.class);
+        List<DnsBean> dnsBeanList = new ArrayList<>();
+
         if (dnsBeanList.isEmpty()) {
             VPN_DNS4 = "8.8.8.8";
             VPN_DNS6 = "2001:4860:4860::8888";
@@ -119,7 +121,9 @@ public class LocalVpnService extends VpnService {
             new Thread() {
                 @Override
                 public void run() {
-                    DnsUtils.handleHosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostData.class));
+//                    DnsUtils.handleHosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostD.class));
+                    DnsUtils.handleHosts(RepositoryProvider.INSTANCE.providerHostRepository(getApplicationContext()).getAllHosts());
+
                 }
             }.start();
         } catch (Exception e) {

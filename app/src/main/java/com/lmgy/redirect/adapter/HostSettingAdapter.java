@@ -2,7 +2,6 @@ package com.lmgy.redirect.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +15,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lmgy.redirect.R;
-import com.lmgy.redirect.bean.HostData;
+import com.lmgy.redirect.db.data.HostData;
 
 import org.jetbrains.annotations.NotNull;
 

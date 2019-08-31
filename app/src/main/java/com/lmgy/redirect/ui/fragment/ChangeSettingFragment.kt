@@ -13,9 +13,9 @@ import androidx.appcompat.widget.Toolbar
 import com.google.android.material.snackbar.Snackbar
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.bean.HostData
+import com.lmgy.redirect.db.RepositoryProvider
+import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.event.MessageEvent
-import com.lmgy.redirect.utils.SPUtils
 import org.greenrobot.eventbus.EventBus
 import java.util.regex.Pattern
 
@@ -38,8 +38,9 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            hostData = it.getSerializable("hostData") as? HostData
-            mId = it.getInt("id", -1)
+            val args = ChangeSettingFragmentArgs.fromBundle(it)
+            hostData = args.hostData
+            mId = args.id
         }
         mContext = this.context ?: requireContext()
     }
@@ -55,7 +56,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_delete -> {
-                val dataList = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
+                val dataList = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
+//                val dataList = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
                 if (hostData != null) {
                     for (it in dataList) {
                         if (it.ipAddress == hostData?.ipAddress && it.hostName == hostData?.hostName) {
@@ -63,7 +65,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                             break
                         }
                     }
-                    SPUtils.setDataList(mContext, "hostList", dataList)
+                    RepositoryProvider.providerHostRepository(mContext).updateAll(dataList)
+//                    SPUtils.setDataList(mContext, "hostList", dataList)
                     EventBus.getDefault().post(MessageEvent(2, getString(R.string.delete_successful)))
                     activity?.onBackPressed()
                 }
@@ -140,7 +143,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     }
 
     private fun saveOrUpdate(savedHostData: HostData) {
-        val hostDataList = SPUtils.getDataList(activity, "hostList", HostData::class.java)
+        val hostDataList = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
+//        val hostDataList = SPUtils.getDataList(activity, "hostList", HostData::class.java)
         e("asd", "" + mId + " - " + hostDataList.size)
         if (mId != -1) {//覆盖
             val hostData = hostDataList[mId]
@@ -151,7 +155,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         } else {//新建
             hostDataList.add(savedHostData)
         }
-        SPUtils.setDataList(mContext, "hostList", hostDataList)
+        RepositoryProvider.providerHostRepository(mContext).updateAll(hostDataList)
+//        SPUtils.setDataList(mContext, "hostList", hostDataList)
         EventBus.getDefault().post(MessageEvent(2, getString(R.string.save_successful)))
         activity?.onBackPressed()
     }
