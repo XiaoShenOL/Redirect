@@ -9,8 +9,8 @@ import com.lmgy.redirect.db.repository.HostRepository
  */
 object RepositoryProvider {
 
-    fun providerHostRepository(context: Context): HostRepository {
-        return HostRepository.getInstance(AppDataBase.getInstance(context).hostDao())
-    }
+//    fun providerHostRepository(context: Context): HostRepository {
+//        return HostRepository.getInstance(AppDataBase.getInstance(context).hostDao())
+//    }
 
 }

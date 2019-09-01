@@ -12,23 +12,13 @@ import io.reactivex.Maybe
  */
 class HostViewModel(private val dataSource: HostDao) : ViewModel() {
 
-    fun getAll(): Maybe<MutableList<HostData>> {
-        return dataSource.getAllHosts()
-    }
+    fun getAll(): Maybe<MutableList<HostData>> = dataSource.getAllHosts()
 
-    fun insert(data: HostData): Completable {
-        return dataSource.insertHost(data)
-    }
+    fun insert(data: HostData): Completable = dataSource.insertHost(data)
 
-    fun updateAll(data: MutableList<HostData>): Completable {
-        return dataSource.updateAll(data)
-    }
+    fun updateAll(data: MutableList<HostData>): Completable = dataSource.updateAll(data)
 
-    fun update(data: HostData): Completable {
-        return dataSource.updateHost(data)
-    }
+    fun update(data: HostData): Completable = dataSource.updateHost(data)
 
-    fun delete(data: HostData): Completable {
-        return dataSource.deleteHost(data)
-    }
+    fun delete(data: HostData): Completable = dataSource.deleteHost(data)
 }

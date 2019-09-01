@@ -15,8 +15,8 @@ import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.viewmodel.HostViewModel
+import com.lmgy.redirect.viewmodel.HostViewModelFactory
 import com.lmgy.redirect.viewmodel.Injection
-import com.lmgy.redirect.viewmodel.ViewModelFactory
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -30,21 +30,17 @@ import java.util.regex.Pattern
  */
 class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMenuItemClickListener {
 
-
     private lateinit var mIpAddress: AppCompatEditText
     private lateinit var mHostname: AppCompatEditText
     private lateinit var mRemark: AppCompatEditText
     private lateinit var mBtnSave: Button
-    private var mId: Int = -1
-    private var hostData: HostData? = null
     private lateinit var mContext: Context
-
-    private var dataList: MutableList<HostData> = mutableListOf()
-
-    private lateinit var viewModelFactory: ViewModelFactory
-
+    private lateinit var hostViewModelFactory: HostViewModelFactory
     private lateinit var viewModel: HostViewModel
 
+    private var hostList: MutableList<HostData> = mutableListOf()
+    private var mId: Int = -1
+    private var hostData: HostData? = null
     private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,9 +51,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
             mId = args.id
         }
         mContext = this.context ?: requireContext()
-
-        viewModelFactory = Injection.provideViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(HostViewModel::class.java)
+        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -75,7 +70,6 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
             com.lmgy.redirect.R.id.action_delete -> {
-
                 if (hostData != null) {
                     disposable.add(viewModel.delete(hostData!!)
                             .subscribeOn(Schedulers.io())
@@ -85,7 +79,6 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                                 activity?.onBackPressed()
                             })
                 }
-
             }
         }
         return true
@@ -107,7 +100,6 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
             }
         }
     }
-
 
     private fun initView(view: View) {
         mIpAddress = view.findViewById(com.lmgy.redirect.R.id.ipAddress)
@@ -168,11 +160,9 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                         EventBus.getDefault().post(MessageEvent(2, getString(com.lmgy.redirect.R.string.save_successful)))
                         activity?.onBackPressed()
                     })
-
         } else {
             //新建
-            dataList.add(savedHostData)
-
+            hostList.add(savedHostData)
             disposable.add(viewModel.insert(savedHostData)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())

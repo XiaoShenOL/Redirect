@@ -12,6 +12,7 @@ import io.reactivex.Maybe
  */
 @Dao
 interface HostDao {
+
     @Insert
     fun insertHost(hostData: HostData): Completable
 
@@ -29,6 +30,5 @@ interface HostDao {
 
     @Query("SELECT * FROM HostData")
     fun getAllHosts(): Maybe<MutableList<HostData>>
-
 
 }

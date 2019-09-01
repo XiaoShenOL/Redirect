@@ -9,12 +9,19 @@ import android.widget.AdapterView
 import android.widget.Button
 import android.widget.Spinner
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.bean.DnsBean
+import com.lmgy.redirect.db.data.DnsData
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.net.LocalVpnService
+import com.lmgy.redirect.viewmodel.DnsViewModel
+import com.lmgy.redirect.viewmodel.DnsViewModelFactory
+import com.lmgy.redirect.viewmodel.Injection
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 
 /**
@@ -27,15 +34,20 @@ class DnsFragment : BaseFragment() {
     private lateinit var btnSave: Button
     private lateinit var ipv4: AppCompatEditText
     private lateinit var ipv6: AppCompatEditText
-    private lateinit var data: List<DnsBean>
     private lateinit var mContext: Context
+    private lateinit var dnsViewModelFactory: DnsViewModelFactory
+    private lateinit var viewModel: DnsViewModel
 
     private var position = -1
+    private var dnsList: MutableList<DnsData> = mutableListOf()
+    private val disposable = CompositeDisposable()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
+        dnsViewModelFactory = Injection.provideDnsViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, dnsViewModelFactory).get(DnsViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -50,12 +62,16 @@ class DnsFragment : BaseFragment() {
         initData()
     }
 
-    override fun initData() {
-        data = getList()
-        if (data.isNotEmpty()) {
-            spinner.setSelection(data[0].id)
-            ipv4.setText(data[0].ipv4)
-            ipv6.setText(data[0].ipv6)
+    override fun onStop() {
+        super.onStop()
+        disposable.clear()
+    }
+
+    private fun showDns() {
+        if (dnsList.isNotEmpty()) {
+            spinner.setSelection(dnsList[0].position)
+            ipv4.setText(dnsList[0].ipv4)
+            ipv6.setText(dnsList[0].ipv6)
         }
 
         val ipv4Array = resources.getStringArray(R.array.dns_ipv4_address)
@@ -66,9 +82,9 @@ class DnsFragment : BaseFragment() {
                                         pos: Int, id: Long) {
                 position = pos
                 if (pos == 0) {
-                    if (data.isNotEmpty() && data[0].id == 0) {
-                        ipv4.setText(data[0].ipv4)
-                        ipv6.setText(data[0].ipv6)
+                    if (dnsList.isNotEmpty() && dnsList[0].position == 0) {
+                        ipv4.setText(dnsList[0].ipv4)
+                        ipv6.setText(dnsList[0].ipv6)
                         return
                     }
                     ipv4.setText("")
@@ -89,22 +105,43 @@ class DnsFragment : BaseFragment() {
             if (tempIpv4.isEmpty() || tempIpv6.isEmpty()) {
                 EventBus.getDefault().post(MessageEvent(1, getString(R.string.empty)))
             } else {
-                val data: List<DnsBean> = listOf(DnsBean(position, tempIpv4, tempIpv6))
-//                SPUtils.setDataList(mContext, "dnsList", data)
-                //TODO： 删掉注释
-                if (LocalVpnService.isRunning()) {
-                    EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
+                if (dnsList.isEmpty()) {
+                    disposable.add(viewModel.insertDns(DnsData(position, tempIpv4, tempIpv6))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe {
+                                goBack()
+                            })
                 } else {
-                    EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful)))
+                    disposable.add(viewModel.update(DnsData(dnsList[0].id, position, tempIpv4, tempIpv6))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe {
+                                goBack()
+                            })
                 }
-                Navigation.findNavController(view!!).popBackStack()
             }
         }
     }
 
-//    private fun getList(): List<DnsBean> = SPUtils.getDataList(mContext, "dnsList", DnsBean::class.java)
-    private fun getList(): List<DnsBean> = mutableListOf(DnsBean(0, "8.8.8.8", "2001:4860:4860::8888"))
+    private fun goBack() {
+        if (LocalVpnService.isRunning()) {
+            EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
+        } else {
+            EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful)))
+        }
+        Navigation.findNavController(view!!).popBackStack()
+    }
 
+    override fun initData() {
+        disposable.add(viewModel.getAllDns()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    dnsList = it
+                    showDns()
+                })
+    }
 
     private fun initView(view: View) {
         spinner = view.findViewById(R.id.spinner)

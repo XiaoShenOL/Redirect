@@ -9,15 +9,19 @@ import com.lmgy.redirect.db.dao.HostDao
 import com.lmgy.redirect.db.data.HostData
 import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 import android.icu.lang.UCharacter.GraphemeClusterBreak.V
+import com.lmgy.redirect.db.dao.DnsDao
+import com.lmgy.redirect.db.data.DnsData
 
 
 /**
  * @author lmgy
  * @date 2019/8/31
  */
-@Database(entities = [HostData::class], version = 1, exportSchema = false)
+@Database(entities = [HostData::class, DnsData::class], version = 1, exportSchema = false)
 abstract class AppDataBase : RoomDatabase() {
+
     abstract fun hostDao(): HostDao
+    abstract fun dnsDao(): DnsDao
 
     companion object {
         @Volatile

@@ -10,13 +10,10 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.lmgy.redirect.R;
-import com.lmgy.redirect.bean.DnsBean;
-import com.lmgy.redirect.db.RepositoryProvider;
+import com.lmgy.redirect.db.data.DnsData;
 import com.lmgy.redirect.db.data.HostData;
+import com.lmgy.redirect.db.repository.HostRepository;
 import com.lmgy.redirect.utils.DnsUtils;
-
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
 import java.io.Closeable;
 import java.io.FileDescriptor;
@@ -26,12 +23,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.Selector;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import io.reactivex.Maybe;
 import io.reactivex.MaybeObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -63,7 +60,6 @@ public class LocalVpnService extends VpnService {
     public static final String ACTION_DISCONNECT = LocalVpnService.class.getName() + ".STOP";
 
     private static boolean isRunning = false;
-    private static Thread threadHandleHosts = null;
 
     private String VPN_DNS4;
     private String VPN_DNS6;
@@ -79,9 +75,81 @@ public class LocalVpnService extends VpnService {
     @Override
     public void onCreate() {
         super.onCreate();
-        setupDNS();
-        setupHostRules();
-        setupVPN();
+        Maybe.zip(setupDns(), setupHostRules(), (dnsData, hostData) -> {
+            if (dnsData.isEmpty()) {
+                VPN_DNS4 = "8.8.8.8";
+                VPN_DNS6 = "2001:4860:4860::8888";
+            } else {
+                VPN_DNS4 = dnsData.get(0).getIpv4();
+                VPN_DNS6 = dnsData.get(0).getIpv6();
+            }
+            try {
+                DnsUtils.handleHosts(hostData);
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "error setup host file service", e);
+                return false;
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new MaybeObserver<Boolean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                    }
+
+                    @Override
+                    public void onSuccess(Boolean b) {
+                        if (b) {
+                            setupVpn();
+                        } else {
+                            Log.e(TAG, "start vpn error");
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+    }
+
+    private Maybe<List<DnsData>> setupDns() {
+        return HostRepository.INSTANCE.getDns(getApplicationContext()).
+                subscribeOn(Schedulers.io());
+    }
+
+
+    private Maybe<List<HostData>> setupHostRules() {
+        return HostRepository.INSTANCE.getAllHosts(getApplicationContext())
+                .subscribeOn(Schedulers.io());
+    }
+
+    private void setupVpn() {
+        if (vpnInterface == null) {
+            Builder builder = new Builder();
+            builder.addAddress(VPN_ADDRESS, VPN_ADDRESS_MASK);
+            builder.addAddress(VPN_ADDRESS6, VPN_ADDRESS6_MASK);
+            builder.addRoute(VPN_DNS4, VPN_DNS4_MASK);
+            builder.addRoute(VPN_DNS6, VPN_DNS6_MASK);
+//            builder.addRoute(VPN_ROUTE,VPN_ROUTE_MASK);
+//            builder.addRoute(VPN_ROUTE6,VPN_ROUTE_MASK);
+            builder.setMtu(VPN_MTU);
+            builder.addDnsServer(VPN_DNS4);
+            builder.addDnsServer(VPN_DNS6);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                String[] whiteList = {"com.android.vending", "com.google.android.apps.docs", "com.google.android.apps.photos", "com.google.android.gm", "com.google.android.apps.translate"};
+                for (String white : whiteList) {
+                    try {
+                        builder.addDisallowedApplication(white);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            vpnInterface = builder.setSession(getString(R.string.app_name)).setConfigureIntent(null).establish();
+        }
         if (vpnInterface == null) {
             Log.d(TAG, "unknown error");
             stopVpnService();
@@ -111,82 +179,6 @@ public class LocalVpnService extends VpnService {
         }
     }
 
-    private void setupDNS() {
-//        List<DnsBean> dnsBeanList = SPUtils.getDataList(this, "dnsList", DnsBean.class);
-        List<DnsBean> dnsBeanList = new ArrayList<>();
-
-        if (dnsBeanList.isEmpty()) {
-            VPN_DNS4 = "8.8.8.8";
-            VPN_DNS6 = "2001:4860:4860::8888";
-        } else {
-            VPN_DNS4 = dnsBeanList.get(0).getIpv4();
-            VPN_DNS6 = dnsBeanList.get(0).getIpv6();
-        }
-    }
-
-
-    private void setupHostRules() {
-        try {
-            new Thread() {
-                @Override
-                public void run() {
-                    RepositoryProvider.INSTANCE.providerHostRepository(getApplicationContext()).getAllHosts()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(new MaybeObserver<List<HostData>>() {
-                                @Override
-                                public void onSubscribe(Disposable d) {
-
-                                }
-
-                                @Override
-                                public void onSuccess(List<HostData> hostData) {
-                                    DnsUtils.handleHosts(hostData);
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    Log.e(TAG, "error setup host file service", e);
-                                }
-
-                                @Override
-                                public void onComplete() {
-
-                                }
-                            });
-                }
-            }.start();
-        } catch (Exception e) {
-            Log.e(TAG, "error setup host file service", e);
-        }
-    }
-
-    private void setupVPN() {
-        if (vpnInterface == null) {
-            Builder builder = new Builder();
-            builder.addAddress(VPN_ADDRESS, VPN_ADDRESS_MASK);
-            builder.addAddress(VPN_ADDRESS6, VPN_ADDRESS6_MASK);
-            builder.addRoute(VPN_DNS4, VPN_DNS4_MASK);
-            builder.addRoute(VPN_DNS6, VPN_DNS6_MASK);
-//            builder.addRoute(VPN_ROUTE,VPN_ROUTE_MASK);
-//            builder.addRoute(VPN_ROUTE6,VPN_ROUTE_MASK);
-            builder.setMtu(VPN_MTU);
-            builder.addDnsServer(VPN_DNS4);
-            builder.addDnsServer(VPN_DNS6);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                String[] whiteList = {"com.android.vending", "com.google.android.apps.docs", "com.google.android.apps.photos", "com.google.android.gm", "com.google.android.apps.translate"};
-                for (String white : whiteList) {
-                    try {
-                        builder.addDisallowedApplication(white);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            vpnInterface = builder.setSession(getString(R.string.app_name)).setConfigureIntent(null).establish();
-        }
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_DISCONNECT.equals(intent.getAction())) {
@@ -201,9 +193,7 @@ public class LocalVpnService extends VpnService {
     }
 
     private void stopVpnService() {
-        if (threadHandleHosts != null) {
-            threadHandleHosts.interrupt();
-        }
+
         if (executorService != null) {
             executorService.shutdown();
         }

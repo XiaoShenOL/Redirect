@@ -23,8 +23,8 @@ import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.listener.RecyclerItemClickListener
 import com.lmgy.redirect.viewmodel.HostViewModel
+import com.lmgy.redirect.viewmodel.HostViewModelFactory
 import com.lmgy.redirect.viewmodel.Injection
-import com.lmgy.redirect.viewmodel.ViewModelFactory
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -48,10 +48,10 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     private lateinit var mTvEmpty: TextView
     private lateinit var mContext: Context
 
-    private var dataList: MutableList<HostData> = mutableListOf()
+    private var hostList: MutableList<HostData> = mutableListOf()
 
 
-    private lateinit var viewModelFactory: ViewModelFactory
+    private lateinit var hostViewModelFactory: HostViewModelFactory
 
     private lateinit var viewModel: HostViewModel
 
@@ -61,8 +61,8 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
 
-        viewModelFactory = Injection.provideViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(HostViewModel::class.java)
+        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
 
         EventBus.getDefault().register(this)
     }
@@ -79,27 +79,6 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         disposable.clear()
     }
 
-
-    private fun getList() {
-        disposable.add(viewModel.getAll()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    dataList = it
-                    if (dataList.size == 0) {
-                        mRv.visibility = View.GONE
-                        mTvEmpty.visibility = View.VISIBLE
-                    } else {
-                        mRv.visibility = View.VISIBLE
-                        mTvEmpty.visibility = View.GONE
-                    }
-                    if (mRv.adapter == null) {
-                        mAdapter = HostSettingAdapter(mContext, dataList)
-                        mRv.adapter = mAdapter
-                    }
-                })
-    }
-
     override fun checkStatus() {
         menu?.findItem(R.id.nav_rules)?.isChecked = true
         toolbar?.inflateMenu(R.menu.menu_list)
@@ -110,19 +89,15 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_toggle -> {
-
                 selectedIds.forEach {
-                    val hostData = dataList[Integer.parseInt(it)]
+                    val hostData = hostList[Integer.parseInt(it)]
                     hostData.type = !hostData.type
                 }
-
-                mAdapter.setHostDataList(dataList)
-
+                mAdapter.setHostDataList(hostList)
                 selectedIds.forEach {
                     mAdapter.notifyItemChanged(Integer.parseInt(it))
                 }
-
-                disposable.add(viewModel.updateAll(dataList)
+                disposable.add(viewModel.updateAll(hostList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
@@ -156,15 +131,11 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         EventBus.getDefault().unregister(this)
     }
 
-    override fun initData() {
 
-        getList()
-
+    private fun showData() {
         mRv.layoutManager = LinearLayoutManager(mContext)
-
         mRv.addOnItemTouchListener(RecyclerItemClickListener(mContext, mRv, object : RecyclerItemClickListener.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
-
                 if (!isMultiSelect) {
                     selectedIds = ArrayList()
                     isMultiSelect = true
@@ -173,12 +144,10 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
             }
 
             override fun onItemLongClick(view: View, position: Int) {
-
                 val action = RulesFragmentDirections.actionNavRulesToNavEdit()
-                        .setHostData(dataList[position])
+                        .setHostData(hostList[position])
                         .setId(position)
                 Navigation.findNavController(view).navigate(action)
-
             }
         }))
 
@@ -193,45 +162,67 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                val copyDataList = ArrayList<HostData>(dataList)
-                dataList.removeAt(position)
+                val copyDataList = ArrayList<HostData>(hostList)
+                hostList.removeAt(position)
 
-                mAdapter.setHostDataList(dataList)
+                mAdapter.setHostDataList(hostList)
 
-                disposable.add(viewModel.updateAll(dataList)
+                disposable.add(viewModel.updateAll(hostList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
-
                 Snackbar.make(view!!, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
-
                             mAdapter.setHostDataList(copyDataList)
-
+                            hostList = copyDataList
                             disposable.add(viewModel.updateAll(copyDataList)
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe {
-                                        dataList = copyDataList
-                                    })
+                                    .subscribe())
                         }
                         .show()
             }
         })
-
         itemTouchHelper.attachToRecyclerView(mRv)
 
         mSwipeRefreshLayout.setOnRefreshListener {
-            getList()
-            mAdapter.setHostDataList(dataList)
+            initData()
             mSwipeRefreshLayout.isRefreshing = false
         }
+
+    }
+
+    private fun checkDns() {
+        if (hostList.size == 0) {
+            mRv.visibility = View.GONE
+            mTvEmpty.visibility = View.VISIBLE
+        } else {
+            mRv.visibility = View.VISIBLE
+            mTvEmpty.visibility = View.GONE
+        }
+        if (mRv.adapter == null) {
+            mAdapter = HostSettingAdapter(mContext, hostList)
+            mRv.adapter = mAdapter
+            showData()
+        } else {
+            mAdapter.setHostDataList(hostList)
+        }
+    }
+
+    override fun initData() {
+        disposable.add(viewModel.getAll()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    hostList = it
+                    checkDns()
+                })
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun eventBus(event: MessageEvent) {
         if (event.type == 2) {
-            mAdapter.setHostDataList(dataList)
+            mAdapter.setHostDataList(hostList)
         }
     }
 

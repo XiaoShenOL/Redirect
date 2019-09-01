@@ -42,14 +42,6 @@ public class HostData implements Serializable {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setType(boolean type) {
-        this.type = type;
-    }
-
     public boolean getType() {
         return type;
     }
@@ -64,5 +56,25 @@ public class HostData implements Serializable {
 
     public String getRemark() {
         return remark;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setType(boolean type) {
+        this.type = type;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

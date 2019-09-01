@@ -19,8 +19,8 @@ import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.net.LocalVpnService
 import com.lmgy.redirect.viewmodel.HostViewModel
+import com.lmgy.redirect.viewmodel.HostViewModelFactory
 import com.lmgy.redirect.viewmodel.Injection
-import com.lmgy.redirect.viewmodel.ViewModelFactory
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -34,6 +34,11 @@ class HomeFragment : BaseFragment() {
     private var waitingForVPNStart: Boolean = false
     private lateinit var mContext: Context
     private lateinit var mBtnVpn: SwitchButton
+    private lateinit var hostViewModelFactory: HostViewModelFactory
+    private lateinit var viewModel: HostViewModel
+
+    private val disposable = CompositeDisposable()
+    private var hostList: MutableList<HostData> = mutableListOf()
     private val vpnStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (LocalVpnService.BROADCAST_VPN_STATE == intent.action && intent.getBooleanExtra("running", false)) {
@@ -42,20 +47,12 @@ class HomeFragment : BaseFragment() {
         }
     }
 
-    private lateinit var viewModelFactory: ViewModelFactory
-
-    private lateinit var viewModel: HostViewModel
-
-    private val disposable = CompositeDisposable()
-
-    private var dataList: MutableList<HostData> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
-
-        viewModelFactory = Injection.provideViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(HostViewModel::class.java)
+        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -80,27 +77,29 @@ class HomeFragment : BaseFragment() {
         disposable.clear()
     }
 
-    override fun initData() {
+    private fun checkHost() {
+        mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                if (hostList.size == 0) {
+                    showDialog()
+                } else {
+                    startVPN()
+                }
+            } else {
+                shutdownVPN()
+            }
+        }
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(vpnStateReceiver,
+                IntentFilter(LocalVpnService.BROADCAST_VPN_STATE))
+    }
 
+    override fun initData() {
         disposable.add(viewModel.getAll()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    dataList = it
-                    mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
-                        if (isChecked) {
-                            if (checkHost() == -1) {
-                                showDialog()
-                            } else {
-                                startVPN()
-                            }
-                        } else {
-                            shutdownVPN()
-                        }
-                    }
-
-                    LocalBroadcastManager.getInstance(mContext).registerReceiver(vpnStateReceiver,
-                            IntentFilter(LocalVpnService.BROADCAST_VPN_STATE))
+                    hostList = it
+                    checkHost()
                 })
     }
 
@@ -121,14 +120,6 @@ class HomeFragment : BaseFragment() {
 
     private fun setButton(enable: Boolean) {
         mBtnVpn.isChecked = !enable
-    }
-
-    private fun checkHost(): Int {
-        return if (dataList.size == 0) {
-            -1
-        } else {
-            1
-        }
     }
 
     override fun checkStatus() {
