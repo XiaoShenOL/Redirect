@@ -11,9 +11,6 @@ import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 
 
-
-
-
 /**
  * @author lmgy
  * @date 2019/8/31
@@ -35,7 +32,7 @@ abstract class AppDataBase : RoomDatabase() {
         }
 
         private fun buildDataBase(context: Context): AppDataBase {
-            return Room.databaseBuilder(context, AppDataBase::class.java, "redirect_database")
+            return Room.databaseBuilder(context, AppDataBase::class.java, "redirectDatabase.db")
                     .build()
         }
 

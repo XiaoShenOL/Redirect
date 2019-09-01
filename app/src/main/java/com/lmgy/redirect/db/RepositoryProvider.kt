@@ -12,4 +12,5 @@ object RepositoryProvider {
     fun providerHostRepository(context: Context): HostRepository {
         return HostRepository.getInstance(AppDataBase.getInstance(context).hostDao())
     }
+
 }

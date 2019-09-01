@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -18,10 +19,15 @@ import com.google.android.material.snackbar.Snackbar
 import com.lmgy.redirect.R
 import com.lmgy.redirect.adapter.HostSettingAdapter
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.db.RepositoryProvider
 import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.listener.RecyclerItemClickListener
+import com.lmgy.redirect.viewmodel.HostViewModel
+import com.lmgy.redirect.viewmodel.Injection
+import com.lmgy.redirect.viewmodel.ViewModelFactory
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -42,10 +48,22 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     private lateinit var mTvEmpty: TextView
     private lateinit var mContext: Context
 
+    private var dataList: MutableList<HostData> = mutableListOf()
+
+
+    private lateinit var viewModelFactory: ViewModelFactory
+
+    private lateinit var viewModel: HostViewModel
+
+    private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
+
+        viewModelFactory = Injection.provideViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, viewModelFactory).get(HostViewModel::class.java)
+
         EventBus.getDefault().register(this)
     }
 
@@ -56,17 +74,30 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     }
 
 
-    private fun getList(): MutableList<HostData> {
-        val dataList = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
-//        val dataList = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
-        if (dataList.size == 0) {
-            mRv.visibility = View.GONE
-            mTvEmpty.visibility = View.VISIBLE
-        } else {
-            mRv.visibility = View.VISIBLE
-            mTvEmpty.visibility = View.GONE
-        }
-        return dataList
+    override fun onStop() {
+        super.onStop()
+        disposable.clear()
+    }
+
+
+    private fun getList() {
+        disposable.add(viewModel.getAll()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    dataList = it
+                    if (dataList.size == 0) {
+                        mRv.visibility = View.GONE
+                        mTvEmpty.visibility = View.VISIBLE
+                    } else {
+                        mRv.visibility = View.VISIBLE
+                        mTvEmpty.visibility = View.GONE
+                    }
+                    if (mRv.adapter == null) {
+                        mAdapter = HostSettingAdapter(mContext, dataList)
+                        mRv.adapter = mAdapter
+                    }
+                })
     }
 
     override fun checkStatus() {
@@ -79,14 +110,22 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.action_toggle -> {
-                val hostDataList = getList()
+
                 selectedIds.forEach {
-                    val hostData = hostDataList[Integer.parseInt(it)]
+                    val hostData = dataList[Integer.parseInt(it)]
                     hostData.type = !hostData.type
                 }
-                RepositoryProvider.providerHostRepository(mContext).updateAll(hostDataList)
-//                SPUtils.setDataList(mContext, "hostList", hostDataList)
-                mAdapter.setHostDataList(hostDataList)
+
+                mAdapter.setHostDataList(dataList)
+
+                selectedIds.forEach {
+                    mAdapter.notifyItemChanged(Integer.parseInt(it))
+                }
+
+                disposable.add(viewModel.updateAll(dataList)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe())
             }
             R.id.action_add -> {
                 NavHostFragment.findNavController(this).navigate(R.id.nav_edit)
@@ -118,9 +157,10 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     }
 
     override fun initData() {
-        mAdapter = HostSettingAdapter(mContext, getList())
+
+        getList()
+
         mRv.layoutManager = LinearLayoutManager(mContext)
-        mRv.adapter = mAdapter
 
         mRv.addOnItemTouchListener(RecyclerItemClickListener(mContext, mRv, object : RecyclerItemClickListener.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
@@ -135,7 +175,7 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
             override fun onItemLongClick(view: View, position: Int) {
 
                 val action = RulesFragmentDirections.actionNavRulesToNavEdit()
-                        .setHostData(getList()[position])
+                        .setHostData(dataList[position])
                         .setId(position)
                 Navigation.findNavController(view).navigate(action)
 
@@ -153,18 +193,27 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                val dataList = getList()
                 val copyDataList = ArrayList<HostData>(dataList)
                 dataList.removeAt(position)
 
-                RepositoryProvider.providerHostRepository(mContext).updateAll(dataList)
-//                SPUtils.setDataList<HostData>(context, "hostList", dataList)
                 mAdapter.setHostDataList(dataList)
+
+                disposable.add(viewModel.updateAll(dataList)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe())
+
                 Snackbar.make(view!!, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
-                            RepositoryProvider.providerHostRepository(mContext).updateAll(copyDataList)
-//                            SPUtils.setDataList<HostData>(context, "hostList", copyDataList)
+
                             mAdapter.setHostDataList(copyDataList)
+
+                            disposable.add(viewModel.updateAll(copyDataList)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe {
+                                        dataList = copyDataList
+                                    })
                         }
                         .show()
             }
@@ -173,7 +222,8 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         itemTouchHelper.attachToRecyclerView(mRv)
 
         mSwipeRefreshLayout.setOnRefreshListener {
-            mAdapter.setHostDataList(getList())
+            getList()
+            mAdapter.setHostDataList(dataList)
             mSwipeRefreshLayout.isRefreshing = false
         }
     }
@@ -181,7 +231,7 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun eventBus(event: MessageEvent) {
         if (event.type == 2) {
-            mAdapter.setHostDataList(getList())
+            mAdapter.setHostDataList(dataList)
         }
     }
 

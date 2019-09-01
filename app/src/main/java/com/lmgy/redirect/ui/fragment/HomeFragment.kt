@@ -10,12 +10,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.navigation.Navigation
 import com.kyleduo.switchbutton.SwitchButton
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
-import com.lmgy.redirect.db.RepositoryProvider
+import com.lmgy.redirect.db.data.HostData
 import com.lmgy.redirect.net.LocalVpnService
+import com.lmgy.redirect.viewmodel.HostViewModel
+import com.lmgy.redirect.viewmodel.Injection
+import com.lmgy.redirect.viewmodel.ViewModelFactory
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 /**
  * @author lmgy
@@ -34,9 +42,20 @@ class HomeFragment : BaseFragment() {
         }
     }
 
+    private lateinit var viewModelFactory: ViewModelFactory
+
+    private lateinit var viewModel: HostViewModel
+
+    private val disposable = CompositeDisposable()
+
+    private var dataList: MutableList<HostData> = mutableListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
+
+        viewModelFactory = Injection.provideViewModelFactory(mContext)
+        viewModel = ViewModelProvider(this, viewModelFactory).get(HostViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -55,21 +74,34 @@ class HomeFragment : BaseFragment() {
         mBtnVpn = view.findViewById(R.id.btn_vpn)
     }
 
-    override fun initData() {
-        mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (checkHost() == -1) {
-                    showDialog()
-                } else {
-                    startVPN()
-                }
-            } else {
-                shutdownVPN()
-            }
-        }
 
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(vpnStateReceiver,
-                IntentFilter(LocalVpnService.BROADCAST_VPN_STATE))
+    override fun onStop() {
+        super.onStop()
+        disposable.clear()
+    }
+
+    override fun initData() {
+
+        disposable.add(viewModel.getAll()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    dataList = it
+                    mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
+                        if (isChecked) {
+                            if (checkHost() == -1) {
+                                showDialog()
+                            } else {
+                                startVPN()
+                            }
+                        } else {
+                            shutdownVPN()
+                        }
+                    }
+
+                    LocalBroadcastManager.getInstance(mContext).registerReceiver(vpnStateReceiver,
+                            IntentFilter(LocalVpnService.BROADCAST_VPN_STATE))
+                })
     }
 
     override fun onResume() {
@@ -92,9 +124,7 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkHost(): Int {
-        val list = RepositoryProvider.providerHostRepository(mContext).getAllHosts()
-//        val list = SPUtils.getDataList(mContext, "hostList", HostData::class.java)
-        return if (list.size == 0) {
+        return if (dataList.size == 0) {
             -1
         } else {
             1
@@ -113,7 +143,7 @@ class HomeFragment : BaseFragment() {
                 .setMessage(getString(R.string.dialog_message))
                 .setPositiveButton(getString(R.string.dialog_confirm)) { _, _ ->
                     setButton(true)
-                    startActivity(Intent(mContext, RulesFragment::class.java))
+                    Navigation.findNavController(this.view!!).navigate(R.id.nav_rules)
                 }
                 .setNegativeButton(getString(R.string.dialog_cancel)) { _, _ -> setButton(true) }
                 .show()

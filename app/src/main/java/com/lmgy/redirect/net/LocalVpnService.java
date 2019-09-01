@@ -12,7 +12,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.bean.DnsBean;
 import com.lmgy.redirect.db.RepositoryProvider;
+import com.lmgy.redirect.db.data.HostData;
 import com.lmgy.redirect.utils.DnsUtils;
+
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.Closeable;
 import java.io.FileDescriptor;
@@ -27,6 +31,11 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import io.reactivex.MaybeObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * @author lm
@@ -121,9 +130,30 @@ public class LocalVpnService extends VpnService {
             new Thread() {
                 @Override
                 public void run() {
-//                    DnsUtils.handleHosts(SPUtils.getDataList(getApplicationContext(), "hostList", HostD.class));
-                    DnsUtils.handleHosts(RepositoryProvider.INSTANCE.providerHostRepository(getApplicationContext()).getAllHosts());
+                    RepositoryProvider.INSTANCE.providerHostRepository(getApplicationContext()).getAllHosts()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(new MaybeObserver<List<HostData>>() {
+                                @Override
+                                public void onSubscribe(Disposable d) {
 
+                                }
+
+                                @Override
+                                public void onSuccess(List<HostData> hostData) {
+                                    DnsUtils.handleHosts(hostData);
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+                                    Log.e(TAG, "error setup host file service", e);
+                                }
+
+                                @Override
+                                public void onComplete() {
+
+                                }
+                            });
                 }
             }.start();
         } catch (Exception e) {

@@ -2,6 +2,9 @@ package com.lmgy.redirect.db.dao
 
 import androidx.room.*
 import com.lmgy.redirect.db.data.HostData
+import io.reactivex.Completable
+import io.reactivex.Flowable
+import io.reactivex.Maybe
 
 /**
  * @author lmgy
@@ -10,22 +13,22 @@ import com.lmgy.redirect.db.data.HostData
 @Dao
 interface HostDao {
     @Insert
-    fun insertHost(hostData: HostData)
+    fun insertHost(hostData: HostData): Completable
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun updateHost(hostData: HostData)
+    fun updateHost(hostData: HostData): Completable
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun updateAll(hostData: MutableList<HostData>)
+    fun updateAll(hostData: MutableList<HostData>): Completable
 
     @Delete
-    fun deleteHost(hostData: HostData)
+    fun deleteHost(hostData: HostData): Completable
 
     @Delete
-    fun deleteAll(hostData: MutableList<HostData>)
+    fun deleteAll(hostData: MutableList<HostData>): Completable
 
     @Query("SELECT * FROM HostData")
-    fun getAllHosts(): MutableList<HostData>
+    fun getAllHosts(): Maybe<MutableList<HostData>>
 
 
 }

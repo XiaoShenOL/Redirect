@@ -2,6 +2,11 @@ package com.lmgy.redirect.db.repository
 
 import com.lmgy.redirect.db.dao.HostDao
 import com.lmgy.redirect.db.data.HostData
+import io.reactivex.Observable
+import io.reactivex.Observer
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 
 /**
  * @author lmgy
@@ -20,35 +25,7 @@ class HostRepository private constructor(private val hostDao: HostDao) {
     fun deleteHost(hostData: HostData) = hostDao.deleteHost(hostData)
 
     fun deleteAll(hostData: MutableList<HostData>) = hostDao.deleteAll(hostData)
-//    suspend fun updateHost(hostData: HostData) {
-//        withContext(IO) {
-//            hostDao.updateHost(hostData)
-//        }
-//    }
-//
-//    suspend fun updateAll(hostData: MutableList<HostData>){
-//        withContext(IO){
-//            hostDao.updateAll(hostData)
-//        }
-//    }
-//
-//    suspend fun insertHost(hostData: HostData) {
-//        withContext(IO) {
-//            hostDao.insertHost(hostData)
-//        }
-//    }
-//
-//    suspend fun deleteHost(hostData: HostData) {
-//        withContext(IO) {
-//            hostDao.deleteHost(hostData)
-//        }
-//    }
-//
-//    suspend fun deleteAll(hostData: MutableList<HostData>) {
-//        withContext(IO) {
-//            hostDao.deleteAll(hostData)
-//        }
-//    }
+
 
     companion object {
         @Volatile

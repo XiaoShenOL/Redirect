@@ -104,8 +104,8 @@ public class DnsUtils {
             Iterator<HostData> savedHostDataIterator = savedHostDataList.iterator();
             HostData savedHostData;
 
-            DOMAINS_IP_MAPS4 = new ConcurrentHashMap<>();
-            DOMAINS_IP_MAPS6 = new ConcurrentHashMap<>();
+            DOMAINS_IP_MAPS4 = new ConcurrentHashMap<>(16);
+            DOMAINS_IP_MAPS6 = new ConcurrentHashMap<>(16);
 
             while (!Thread.interrupted() && savedHostDataIterator.hasNext()) {
                 savedHostData = savedHostDataIterator.next();

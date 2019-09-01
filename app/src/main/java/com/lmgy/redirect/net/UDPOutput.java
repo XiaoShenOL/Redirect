@@ -59,9 +59,9 @@ public class UDPOutput implements Runnable {
                 }
                 // hook dns packet
                 if (currentPacket.udpHeader.destinationPort == 53) {
-                    ByteBuffer packet_buffer = DnsUtils.handleDnsPacket(currentPacket);
-                    if (packet_buffer != null) {
-                        this.outputQueue.offer(packet_buffer);
+                    ByteBuffer packetBuffer = DnsUtils.handleDnsPacket(currentPacket);
+                    if (packetBuffer != null) {
+                        this.outputQueue.offer(packetBuffer);
                         continue;
                     }
                 }

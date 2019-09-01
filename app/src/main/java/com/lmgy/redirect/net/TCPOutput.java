@@ -15,8 +15,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-/*
- * Created by lmgy on 14/8/2019
+/**
+ * @author lmgy
+ * @date 2019/8/14
  */
 public class TCPOutput implements Runnable {
     private static final String TAG = "TCPOutput";

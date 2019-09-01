@@ -3,11 +3,12 @@ package com.lmgy.redirect.net;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-/*
- * Created by lmgy on 14/8/2019
+/**
+ * @author lmgy
+ * @date 2019/8/14
  */
 public class ByteBufferPool {
-    private static final int BUFFER_SIZE = 16384; // XXX: Is this ideal?
+    private static final int BUFFER_SIZE = 16384;
     private static ConcurrentLinkedQueue<ByteBuffer> pool = new ConcurrentLinkedQueue<>();
 
     public static ByteBuffer acquire() {

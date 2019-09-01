@@ -123,7 +123,8 @@ public class TCPInput implements Runnable {
                 // XXX: We should ideally be splitting segments by MTU/MSS, but this seems to work without
                 referencePacket.updateTCPBuffer(receiveBuffer, (byte) (Packet.TCPHeader.PSH | Packet.TCPHeader.ACK),
                         tcb.mySequenceNum, tcb.myAcknowledgementNum, readBytes);
-                tcb.mySequenceNum += readBytes; // Next sequence number
+                // Next sequence number
+                tcb.mySequenceNum += readBytes;
                 receiveBuffer.position(referencePacket.IP_TRAN_SIZE + readBytes);
             }
         }

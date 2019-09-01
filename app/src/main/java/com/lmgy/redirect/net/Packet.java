@@ -16,6 +16,8 @@ public class Packet {
     private static final int UDP_HEADER_SIZE = 8;
     private static final int TCP = 6;
     private static final int UDP = 17;
+    private static final int IPV4 = 4;
+    private static final int IPV6 = 6;
     private int IP_HEADER_SIZE;
     public int IP_TRAN_SIZE;
     public IPHeader ipHeader;
@@ -29,12 +31,12 @@ public class Packet {
     public Packet(ByteBuffer buffer) throws UnknownHostException {
         byte versionAndIHL = buffer.get();
         byte version = (byte) (versionAndIHL >> 4);
-        if (version == 4) {
+        if (version == IPV4) {
             IP_HEADER_SIZE = IP4_HEADER_SIZE;
             byte IHL = (byte) (versionAndIHL & 0x0F);
             int headerLength = IHL << 2;
             this.ipHeader = new IP4Header(buffer, version, IHL, headerLength);
-        } else if (version == 6) {
+        } else if (version == IPV6) {
             IP_HEADER_SIZE = IP6_HEADER_SIZE;
             this.ipHeader = new IP6Header(buffer, version);
         } else {
@@ -150,7 +152,7 @@ public class Packet {
         }
         ByteBuffer buffer;
         // Calculate pseudo-header checksum
-        if (this.ipHeader.version == 4) {
+        if (this.ipHeader.version == IPV4) {
             if (isUDP()) {
                 backingBuffer.putShort(IP_HEADER_SIZE + 6, (short) 0);
                 udpHeader.checksum = 0;
@@ -161,7 +163,7 @@ public class Packet {
             buffer = ByteBuffer.wrap(ipHeader.destinationAddress.getAddress());
             sum += BitUtils.getUnsignedShort(buffer.getShort()) + BitUtils.getUnsignedShort(buffer.getShort());
             sum += ipHeader.protocol + length;
-        } else if (this.ipHeader.version == 6) {
+        } else if (this.ipHeader.version == IPV6) {
             final int bbLength = 38; // IPv6 src + dst + nextHeader (with padding) + length 16+16+2+4
             buffer = ByteBufferPool.acquire();
             buffer.put(ipHeader.sourceAddress.getAddress());
