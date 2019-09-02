@@ -37,6 +37,7 @@ class DnsFragment : BaseFragment() {
     private lateinit var mContext: Context
     private lateinit var dnsViewModelFactory: DnsViewModelFactory
     private lateinit var viewModel: DnsViewModel
+    private lateinit var mView: View
 
     private var position = -1
     private var dnsList: MutableList<DnsData> = mutableListOf()
@@ -52,9 +53,9 @@ class DnsFragment : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_dns, container, false)
-        initView(view)
-        return view
+        mView = inflater.inflate(R.layout.fragment_dns, container, false)
+        initView(mView)
+        return mView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -67,13 +68,7 @@ class DnsFragment : BaseFragment() {
         disposable.clear()
     }
 
-    private fun showDns() {
-        if (dnsList.isNotEmpty()) {
-            spinner.setSelection(dnsList[0].position)
-            ipv4.setText(dnsList[0].ipv4)
-            ipv6.setText(dnsList[0].ipv6)
-        }
-
+    private fun setListener(){
         val ipv4Array = resources.getStringArray(R.array.dns_ipv4_address)
         val ipv6Array = resources.getStringArray(R.array.dns_ipv6_address)
 
@@ -94,14 +89,12 @@ class DnsFragment : BaseFragment() {
                     ipv6.setText(ipv6Array[pos])
                 }
             }
-
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
         btnSave.setOnClickListener {
             val tempIpv4 = (ipv4.text?.toString() ?: "").trim()
             val tempIpv6 = (ipv6.text?.toString() ?: "").trim()
-
             if (tempIpv4.isEmpty() || tempIpv6.isEmpty()) {
                 EventBus.getDefault().post(MessageEvent(1, getString(R.string.empty)))
             } else {
@@ -124,13 +117,22 @@ class DnsFragment : BaseFragment() {
         }
     }
 
+    private fun showDns() {
+        if (dnsList.isNotEmpty()) {
+            spinner.setSelection(dnsList[0].position)
+            ipv4.setText(dnsList[0].ipv4)
+            ipv6.setText(dnsList[0].ipv6)
+        }
+        setListener()
+    }
+
     private fun goBack() {
         if (LocalVpnService.isRunning()) {
             EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
         } else {
             EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful)))
         }
-        Navigation.findNavController(view!!).popBackStack()
+        Navigation.findNavController(mView).popBackStack()
     }
 
     override fun initData() {

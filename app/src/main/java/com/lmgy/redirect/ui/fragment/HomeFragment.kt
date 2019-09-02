@@ -36,6 +36,7 @@ class HomeFragment : BaseFragment() {
     private lateinit var mBtnVpn: SwitchButton
     private lateinit var hostViewModelFactory: HostViewModelFactory
     private lateinit var viewModel: HostViewModel
+    private lateinit var mView: View
 
     private val disposable = CompositeDisposable()
     private var hostList: MutableList<HostData> = mutableListOf()
@@ -57,9 +58,9 @@ class HomeFragment : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
-        initView(view)
-        return view
+        mView = inflater.inflate(R.layout.fragment_home, container, false)
+        initView(mView)
+        return mView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -134,7 +135,7 @@ class HomeFragment : BaseFragment() {
                 .setMessage(getString(R.string.dialog_message))
                 .setPositiveButton(getString(R.string.dialog_confirm)) { _, _ ->
                     setButton(true)
-                    Navigation.findNavController(this.view!!).navigate(R.id.nav_rules)
+                    Navigation.findNavController(mView).navigate(R.id.nav_rules)
                 }
                 .setNegativeButton(getString(R.string.dialog_cancel)) { _, _ -> setButton(true) }
                 .show()

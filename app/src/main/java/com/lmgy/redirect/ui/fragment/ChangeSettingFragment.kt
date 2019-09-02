@@ -37,6 +37,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     private lateinit var mContext: Context
     private lateinit var hostViewModelFactory: HostViewModelFactory
     private lateinit var viewModel: HostViewModel
+    private lateinit var mView: View
 
     private var hostList: MutableList<HostData> = mutableListOf()
     private var mId: Int = -1
@@ -57,9 +58,9 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(com.lmgy.redirect.R.layout.fragment_change_setting, container, false)
-        initView(view)
-        return view
+        mView = inflater.inflate(com.lmgy.redirect.R.layout.fragment_change_setting, container, false)
+        initView(mView)
+        return mView
     }
 
     override fun onStop() {
@@ -71,7 +72,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         when (item?.itemId) {
             com.lmgy.redirect.R.id.action_delete -> {
                 if (hostData != null) {
-                    disposable.add(viewModel.delete(hostData!!)
+                    disposable.add(viewModel.delete(requireNotNull(hostData))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe {
@@ -89,12 +90,12 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
             com.lmgy.redirect.R.id.btn_save -> if (isIP(mIpAddress.text.toString())) {
                 if (mHostname.text.toString().isNotEmpty()) {
                     hostData = HostData(true, mIpAddress.text.toString(), mHostname.text.toString(), mRemark.text.toString())
-                    saveOrUpdate(hostData!!)
+                    saveOrUpdate(hostData)
                 } else {
-                    Snackbar.make(view!!, getString(com.lmgy.redirect.R.string.input_correct_hostname), Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(mView, getString(com.lmgy.redirect.R.string.input_correct_hostname), Snackbar.LENGTH_SHORT).show()
                 }
             } else {
-                Snackbar.make(view!!, getString(com.lmgy.redirect.R.string.input_correct_ip), Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(mView, getString(com.lmgy.redirect.R.string.input_correct_ip), Snackbar.LENGTH_SHORT).show()
             }
             else -> {
             }
@@ -150,10 +151,10 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         return ipAddress
     }
 
-    private fun saveOrUpdate(savedHostData: HostData) {
+    private fun saveOrUpdate(savedHostData: HostData?) {
         if (mId != -1) {
             //覆盖
-            disposable.add(viewModel.update(hostData!!)
+            disposable.add(viewModel.update(requireNotNull(hostData))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {
@@ -162,8 +163,8 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                     })
         } else {
             //新建
-            hostList.add(savedHostData)
-            disposable.add(viewModel.insert(savedHostData)
+            hostList.add(requireNotNull(savedHostData))
+            disposable.add(viewModel.insert(requireNotNull(savedHostData))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {

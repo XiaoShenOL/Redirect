@@ -39,38 +39,34 @@ import java.util.*
  */
 class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
-    private var isMultiSelect = false
-    private var selectedIds: MutableList<String> = ArrayList()
 
     private lateinit var mAdapter: HostSettingAdapter
     private lateinit var mSwipeRefreshLayout: SwipeRefreshLayout
     private lateinit var mRv: RecyclerView
     private lateinit var mTvEmpty: TextView
     private lateinit var mContext: Context
+    private lateinit var hostViewModelFactory: HostViewModelFactory
+    private lateinit var viewModel: HostViewModel
+    private lateinit var mView: View
 
     private var hostList: MutableList<HostData> = mutableListOf()
-
-
-    private lateinit var hostViewModelFactory: HostViewModelFactory
-
-    private lateinit var viewModel: HostViewModel
-
     private val disposable = CompositeDisposable()
+    private var isMultiSelect = false
+    private var selectedIds: MutableList<String> = ArrayList()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mContext = this.context ?: requireContext()
-
         hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
         viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
-
         EventBus.getDefault().register(this)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_rules, container, false)
-        initView(view)
-        return view
+        mView = inflater.inflate(R.layout.fragment_rules, container, false)
+        initView(mView)
+        return mView
     }
 
 
@@ -164,14 +160,12 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                 val position = viewHolder.adapterPosition
                 val copyDataList = ArrayList<HostData>(hostList)
                 hostList.removeAt(position)
-
                 mAdapter.setHostDataList(hostList)
-
                 disposable.add(viewModel.updateAll(hostList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
-                Snackbar.make(view!!, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
+                Snackbar.make(mView, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
                             mAdapter.setHostDataList(copyDataList)
                             hostList = copyDataList
@@ -189,7 +183,6 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
             initData()
             mSwipeRefreshLayout.isRefreshing = false
         }
-
     }
 
     private fun checkDns() {

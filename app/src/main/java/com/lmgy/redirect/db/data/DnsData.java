@@ -5,8 +5,6 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-import com.lmgy.redirect.utils.DnsUtils;
-
 import java.io.Serializable;
 
 /**

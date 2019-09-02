@@ -127,8 +127,6 @@ public class DnsUtils {
                 }
 
             }
-            Log.d(TAG, DOMAINS_IP_MAPS4.toString());
-            Log.d(TAG, DOMAINS_IP_MAPS6.toString());
             return DOMAINS_IP_MAPS4.size() + DOMAINS_IP_MAPS6.size();
         } catch (Exception e) {
             Log.d(TAG, "Hook dns error", e);

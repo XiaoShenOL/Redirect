@@ -1,5 +1,6 @@
 package com.lmgy.redirect.ui.activity;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -121,15 +122,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 final String appPackageName = this.getPackageName();
                 try {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                } catch (android.content.ActivityNotFoundException e) {
+                } catch (ActivityNotFoundException e) {
                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
                 }
                 break;
             case R.id.nav_share:
                 Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                 sharingIntent.setType("text/plain");
-                sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.app_name));
-                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.app_share_text));
+                sharingIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                sharingIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.app_share_text));
                 startActivity(Intent.createChooser(sharingIntent, getResources().getString(R.string.nav_share)));
                 break;
             case R.id.nav_about:
