@@ -32,11 +32,10 @@ import io.reactivex.schedulers.Schedulers
 class HomeFragment : BaseFragment() {
 
     private var waitingForVPNStart: Boolean = false
-    private lateinit var mContext: Context
-    private lateinit var mBtnVpn: SwitchButton
-    private lateinit var hostViewModelFactory: HostViewModelFactory
-    private lateinit var viewModel: HostViewModel
-    private lateinit var mView: View
+    private var mContext: Context? = null
+    private var mBtnVpn: SwitchButton? = null
+    private var hostViewModelFactory: HostViewModelFactory? = null
+    private var viewModel: HostViewModel? = null
 
     private val disposable = CompositeDisposable()
     private var hostList: MutableList<HostData> = mutableListOf()
@@ -49,23 +48,28 @@ class HomeFragment : BaseFragment() {
     }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mContext = this.context ?: requireContext()
-        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        mView = inflater.inflate(R.layout.fragment_home, container, false)
-        initView(mView)
-        return mView
+        mContext = this.context ?: requireContext()
+        hostViewModelFactory = Injection.provideHostViewModelFactory(requireNotNull(mContext))
+        viewModel = ViewModelProvider(this, requireNotNull(hostViewModelFactory)).get(HostViewModel::class.java)
+
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        initView(view)
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initData()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mContext = null
+        mBtnVpn = null
+        hostViewModelFactory = null
+        viewModel = null
     }
 
     private fun initView(view: View) {
@@ -79,7 +83,7 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkHost() {
-        mBtnVpn.setOnCheckedChangeListener { _, isChecked ->
+        mBtnVpn?.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (hostList.size == 0) {
                     showDialog()
@@ -90,12 +94,12 @@ class HomeFragment : BaseFragment() {
                 shutdownVPN()
             }
         }
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(vpnStateReceiver,
+        LocalBroadcastManager.getInstance(requireNotNull(mContext)).registerReceiver(vpnStateReceiver,
                 IntentFilter(LocalVpnService.BROADCAST_VPN_STATE))
     }
 
     override fun initData() {
-        disposable.add(viewModel.getAll()
+        disposable.add(requireNotNull(viewModel).getAll()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
@@ -120,7 +124,7 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun setButton(enable: Boolean) {
-        mBtnVpn.isChecked = !enable
+        mBtnVpn?.isChecked = !enable
     }
 
     override fun checkStatus() {
@@ -129,13 +133,13 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun showDialog() {
-        val builder = AlertDialog.Builder(mContext)
+        val builder = AlertDialog.Builder(requireNotNull(mContext))
         builder.setCancelable(false)
                 .setTitle(getString(R.string.dialog_title))
                 .setMessage(getString(R.string.dialog_message))
                 .setPositiveButton(getString(R.string.dialog_confirm)) { _, _ ->
                     setButton(true)
-                    Navigation.findNavController(mView).navigate(R.id.nav_rules)
+                    Navigation.findNavController(requireNotNull(view)).navigate(R.id.nav_rules)
                 }
                 .setNegativeButton(getString(R.string.dialog_cancel)) { _, _ -> setButton(true) }
                 .show()
@@ -143,7 +147,7 @@ class HomeFragment : BaseFragment() {
 
     private fun shutdownVPN() {
         if (LocalVpnService.isRunning()) {
-            mContext.startService(Intent(mContext, LocalVpnService::class.java).setAction(LocalVpnService.ACTION_DISCONNECT))
+            mContext?.startService(Intent(mContext, LocalVpnService::class.java).setAction(LocalVpnService.ACTION_DISCONNECT))
         }
         setButton(true)
     }
@@ -152,7 +156,7 @@ class HomeFragment : BaseFragment() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == VPN_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             waitingForVPNStart = true
-            mContext.startService(Intent(mContext, LocalVpnService::class.java).setAction(LocalVpnService.ACTION_CONNECT))
+            mContext?.startService(Intent(mContext, LocalVpnService::class.java).setAction(LocalVpnService.ACTION_CONNECT))
             setButton(false)
         }
     }

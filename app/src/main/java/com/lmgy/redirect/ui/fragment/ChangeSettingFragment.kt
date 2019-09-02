@@ -30,14 +30,14 @@ import java.util.regex.Pattern
  */
 class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMenuItemClickListener {
 
-    private lateinit var mIpAddress: AppCompatEditText
-    private lateinit var mHostname: AppCompatEditText
-    private lateinit var mRemark: AppCompatEditText
-    private lateinit var mBtnSave: Button
-    private lateinit var mContext: Context
-    private lateinit var hostViewModelFactory: HostViewModelFactory
-    private lateinit var viewModel: HostViewModel
-    private lateinit var mView: View
+    private var mIpAddress: AppCompatEditText? = null
+    private var mHostname: AppCompatEditText? = null
+    private var mRemark: AppCompatEditText? = null
+    private var mBtnSave: Button? = null
+    private var mContext: Context? = null
+    private var hostViewModelFactory: HostViewModelFactory? = null
+    private var viewModel: HostViewModel? = null
+    private var mView: View? = null
 
     private var hostList: MutableList<HostData> = mutableListOf()
     private var mId: Int = -1
@@ -51,15 +51,16 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
             hostData = args.hostData
             mId = args.id
         }
-        mContext = this.context ?: requireContext()
-        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+        mContext = this.context ?: requireContext()
+        hostViewModelFactory = Injection.provideHostViewModelFactory(requireNotNull(mContext))
+        viewModel = ViewModelProvider(this, requireNotNull(hostViewModelFactory)).get(HostViewModel::class.java)
+
         mView = inflater.inflate(com.lmgy.redirect.R.layout.fragment_change_setting, container, false)
-        initView(mView)
+        initView(requireNotNull(mView))
         return mView
     }
 
@@ -72,7 +73,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         when (item?.itemId) {
             com.lmgy.redirect.R.id.action_delete -> {
                 if (hostData != null) {
-                    disposable.add(viewModel.delete(requireNotNull(hostData))
+                    disposable.add(requireNotNull(viewModel).delete(requireNotNull(hostData))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe {
@@ -87,15 +88,15 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
 
     override fun onClick(p0: View?) {
         when (p0?.id) {
-            com.lmgy.redirect.R.id.btn_save -> if (isIP(mIpAddress.text.toString())) {
-                if (mHostname.text.toString().isNotEmpty()) {
-                    hostData = HostData(true, mIpAddress.text.toString(), mHostname.text.toString(), mRemark.text.toString())
+            com.lmgy.redirect.R.id.btn_save -> if (isIP(mIpAddress?.text.toString())) {
+                if (mHostname?.text.toString().isNotEmpty()) {
+                    hostData = HostData(true, mIpAddress?.text.toString(), mHostname?.text.toString(), mRemark?.text.toString())
                     saveOrUpdate(hostData)
                 } else {
-                    Snackbar.make(mView, getString(com.lmgy.redirect.R.string.input_correct_hostname), Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(requireNotNull(mView), getString(com.lmgy.redirect.R.string.input_correct_hostname), Snackbar.LENGTH_SHORT).show()
                 }
             } else {
-                Snackbar.make(mView, getString(com.lmgy.redirect.R.string.input_correct_ip), Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireNotNull(mView), getString(com.lmgy.redirect.R.string.input_correct_ip), Snackbar.LENGTH_SHORT).show()
             }
             else -> {
             }
@@ -107,7 +108,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         mHostname = view.findViewById(com.lmgy.redirect.R.id.hostname)
         mRemark = view.findViewById(com.lmgy.redirect.R.id.remark)
         mBtnSave = view.findViewById(com.lmgy.redirect.R.id.btn_save)
-        mBtnSave.setOnClickListener(this)
+        mBtnSave?.setOnClickListener(this)
     }
 
     override fun checkStatus() {
@@ -118,9 +119,9 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     }
 
     override fun initData() {
-        mIpAddress.setText(hostData?.ipAddress)
-        mHostname.setText(hostData?.hostName)
-        mRemark.setText(hostData?.remark)
+        mIpAddress?.setText(hostData?.ipAddress)
+        mHostname?.setText(hostData?.hostName)
+        mRemark?.setText(hostData?.remark)
     }
 
     private fun isIP(address: String): Boolean {
@@ -151,10 +152,22 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         return ipAddress
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mIpAddress = null
+        mHostname = null
+        mRemark = null
+        mBtnSave = null
+        mContext = null
+        hostViewModelFactory = null
+        viewModel = null
+        mView = null
+    }
+
     private fun saveOrUpdate(savedHostData: HostData?) {
         if (mId != -1) {
             //覆盖
-            disposable.add(viewModel.update(requireNotNull(hostData))
+            disposable.add(requireNotNull(viewModel).update(requireNotNull(hostData))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {
@@ -164,7 +177,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         } else {
             //新建
             hostList.add(requireNotNull(savedHostData))
-            disposable.add(viewModel.insert(requireNotNull(savedHostData))
+            disposable.add(requireNotNull(viewModel).insert(requireNotNull(savedHostData))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {

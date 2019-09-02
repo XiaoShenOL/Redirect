@@ -40,14 +40,14 @@ import java.util.*
 class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
 
 
-    private lateinit var mAdapter: HostSettingAdapter
-    private lateinit var mSwipeRefreshLayout: SwipeRefreshLayout
-    private lateinit var mRv: RecyclerView
-    private lateinit var mTvEmpty: TextView
-    private lateinit var mContext: Context
-    private lateinit var hostViewModelFactory: HostViewModelFactory
-    private lateinit var viewModel: HostViewModel
-    private lateinit var mView: View
+    private var mAdapter: HostSettingAdapter? = null
+    private var mSwipeRefreshLayout: SwipeRefreshLayout? = null
+    private var mRv: RecyclerView? = null
+    private var mTvEmpty: TextView? = null
+    private var mContext: Context? = null
+    private var hostViewModelFactory: HostViewModelFactory? = null
+    private var viewModel: HostViewModel? = null
+    private var mView: View? = null
 
     private var hostList: MutableList<HostData> = mutableListOf()
     private val disposable = CompositeDisposable()
@@ -55,17 +55,16 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     private var selectedIds: MutableList<String> = ArrayList()
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mContext = this.context ?: requireContext()
-        hostViewModelFactory = Injection.provideHostViewModelFactory(mContext)
-        viewModel = ViewModelProvider(this, hostViewModelFactory).get(HostViewModel::class.java)
-        EventBus.getDefault().register(this)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        mContext = this.context ?: requireContext()
+        hostViewModelFactory = Injection.provideHostViewModelFactory(requireNotNull(mContext))
+        viewModel = ViewModelProvider(this, requireNotNull(hostViewModelFactory)).get(HostViewModel::class.java)
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this)
+        }
         mView = inflater.inflate(R.layout.fragment_rules, container, false)
-        initView(mView)
+        initView(requireNotNull(mView))
         return mView
     }
 
@@ -89,11 +88,11 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                     val hostData = hostList[Integer.parseInt(it)]
                     hostData.type = !hostData.type
                 }
-                mAdapter.setHostDataList(hostList)
+                mAdapter?.setHostDataList(hostList)
                 selectedIds.forEach {
-                    mAdapter.notifyItemChanged(Integer.parseInt(it))
+                    mAdapter?.notifyItemChanged(Integer.parseInt(it))
                 }
-                disposable.add(viewModel.updateAll(hostList)
+                disposable.add(requireNotNull(viewModel).updateAll(hostList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
@@ -106,7 +105,7 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     }
 
     private fun multiSelect(position: Int) {
-        val data = mAdapter.getItem(position)
+        val data = mAdapter?.getItem(position)
         if (data != null) {
             if (selectedIds.contains(position.toString())) {
                 selectedIds.remove(position.toString())
@@ -118,19 +117,33 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
             } else {
                 toolbar?.setTitle(R.string.nav_rules)
             }
-            mAdapter.setSelectedIds(selectedIds)
+            mAdapter?.setSelectedIds(selectedIds)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        EventBus.getDefault().unregister(this)
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mAdapter = null
+        mSwipeRefreshLayout = null
+        mRv = null
+        mTvEmpty = null
+        mContext = null
+        hostViewModelFactory = null
+        viewModel = null
+        mView = null
     }
 
 
     private fun showData() {
-        mRv.layoutManager = LinearLayoutManager(mContext)
-        mRv.addOnItemTouchListener(RecyclerItemClickListener(mContext, mRv, object : RecyclerItemClickListener.OnItemClickListener {
+        mRv?.layoutManager = LinearLayoutManager(mContext)
+        mRv?.addOnItemTouchListener(RecyclerItemClickListener(mContext, mRv, object : RecyclerItemClickListener.OnItemClickListener {
             override fun onItemClick(view: View, position: Int) {
                 if (!isMultiSelect) {
                     selectedIds = ArrayList()
@@ -160,16 +173,16 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                 val position = viewHolder.adapterPosition
                 val copyDataList = ArrayList<HostData>(hostList)
                 hostList.removeAt(position)
-                mAdapter.setHostDataList(hostList)
-                disposable.add(viewModel.updateAll(hostList)
+                mAdapter?.setHostDataList(hostList)
+                disposable.add(requireNotNull(viewModel).updateAll(hostList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
-                Snackbar.make(mView, getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
+                Snackbar.make(requireNotNull(mView), getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
-                            mAdapter.setHostDataList(copyDataList)
+                            mAdapter?.setHostDataList(copyDataList)
                             hostList = copyDataList
-                            disposable.add(viewModel.updateAll(copyDataList)
+                            disposable.add(requireNotNull(viewModel).updateAll(copyDataList)
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe())
@@ -179,31 +192,31 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         })
         itemTouchHelper.attachToRecyclerView(mRv)
 
-        mSwipeRefreshLayout.setOnRefreshListener {
+        mSwipeRefreshLayout?.setOnRefreshListener {
             initData()
-            mSwipeRefreshLayout.isRefreshing = false
+            mSwipeRefreshLayout?.isRefreshing = false
         }
     }
 
     private fun checkDns() {
         if (hostList.size == 0) {
-            mRv.visibility = View.GONE
-            mTvEmpty.visibility = View.VISIBLE
+            mRv?.visibility = View.GONE
+            mTvEmpty?.visibility = View.VISIBLE
         } else {
-            mRv.visibility = View.VISIBLE
-            mTvEmpty.visibility = View.GONE
+            mRv?.visibility = View.VISIBLE
+            mTvEmpty?.visibility = View.GONE
         }
-        if (mRv.adapter == null) {
+        if (mRv?.adapter == null) {
             mAdapter = HostSettingAdapter(mContext, hostList)
-            mRv.adapter = mAdapter
+            mRv?.adapter = mAdapter
             showData()
         } else {
-            mAdapter.setHostDataList(hostList)
+            mAdapter?.setHostDataList(hostList)
         }
     }
 
     override fun initData() {
-        disposable.add(viewModel.getAll()
+        disposable.add(requireNotNull(viewModel).getAll()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
@@ -215,7 +228,7 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun eventBus(event: MessageEvent) {
         if (event.type == 2) {
-            mAdapter.setHostDataList(hostList)
+            mAdapter?.setHostDataList(hostList)
         }
     }
 
