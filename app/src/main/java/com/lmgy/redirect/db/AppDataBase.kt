@@ -4,13 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
-import com.lmgy.redirect.db.dao.HostDao
-import com.lmgy.redirect.db.data.HostData
-import android.icu.lang.UCharacter.GraphemeClusterBreak.V
-import android.icu.lang.UCharacter.GraphemeClusterBreak.V
 import com.lmgy.redirect.db.dao.DnsDao
+import com.lmgy.redirect.db.dao.HostDao
 import com.lmgy.redirect.db.data.DnsData
+import com.lmgy.redirect.db.data.HostData
 
 
 /**
@@ -27,18 +24,15 @@ abstract class AppDataBase : RoomDatabase() {
         @Volatile
         private var instance: AppDataBase? = null
 
-        fun getInstance(context: Context): AppDataBase {
-            return instance ?: synchronized(this) {
+        fun getInstance(context: Context) =
+            instance ?: synchronized(this) {
                 instance ?: buildDataBase(context).also {
                     instance = it
                 }
-            }
         }
 
-        private fun buildDataBase(context: Context): AppDataBase {
-            return Room.databaseBuilder(context, AppDataBase::class.java, "redirectDatabase.db")
+        private fun buildDataBase(context: Context) =
+            Room.databaseBuilder(context, AppDataBase::class.java, "redirectDatabase.db")
                     .build()
-        }
-
     }
 }
