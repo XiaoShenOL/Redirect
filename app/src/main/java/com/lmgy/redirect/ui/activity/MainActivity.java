@@ -20,13 +20,10 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.lmgy.livedatabus.LiveDataBus;
 import com.lmgy.redirect.BuildConfig;
 import com.lmgy.redirect.R;
 import com.lmgy.redirect.event.MessageEvent;
-
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 /**
  * @author lmgy
@@ -46,10 +43,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EventBus.getDefault().register(this);
-
         initView();
         setSupportActionBar(mToolbar);
+        initEvent();
 
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_rules, R.id.nav_dns,
@@ -68,12 +64,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mNavView.setNavigationItemSelectedListener(this);
 
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     private void initView() {
@@ -144,11 +134,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void eventBus(MessageEvent event) {
-        if (event.getType() == 1 || event.getType() == 2) {
-            Snackbar.make(mDrawerLayout, event.getMessage(), Snackbar.LENGTH_SHORT).show();
-        }
+    public void initEvent() {
+        LiveDataBus.INSTANCE.with(MessageEvent.class).observe(this, event -> {
+            if (event.getType() == 1 || event.getType() == 2) {
+                Snackbar.make(mDrawerLayout, event.getMessage(), Snackbar.LENGTH_SHORT).show();
+            }
+        });
     }
 
 }

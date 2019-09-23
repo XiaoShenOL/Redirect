@@ -11,8 +11,11 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
+import com.lmgy.livedatabus.LiveDataBus
+import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.db.data.HostData
+import com.lmgy.redirect.event.HostDataEvent
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.viewmodel.HostViewModel
 import com.lmgy.redirect.viewmodel.HostViewModelFactory
@@ -20,7 +23,6 @@ import com.lmgy.redirect.viewmodel.Injection
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import org.greenrobot.eventbus.EventBus
 import java.util.regex.Pattern
 
 
@@ -59,7 +61,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
         hostViewModelFactory = Injection.provideHostViewModelFactory(requireNotNull(mContext))
         viewModel = ViewModelProvider(this, requireNotNull(hostViewModelFactory)).get(HostViewModel::class.java)
 
-        mView = inflater.inflate(com.lmgy.redirect.R.layout.fragment_change_setting, container, false)
+        mView = inflater.inflate(R.layout.fragment_change_setting, container, false)
         initView(requireNotNull(mView))
         return mView
     }
@@ -71,13 +73,13 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            com.lmgy.redirect.R.id.action_delete -> {
+            R.id.action_delete -> {
                 if (hostData != null) {
                     disposable.add(requireNotNull(viewModel).delete(requireNotNull(hostData))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe {
-                                EventBus.getDefault().post(MessageEvent(2, getString(com.lmgy.redirect.R.string.delete_successful)))
+                                LiveDataBus.with(HostDataEvent::class.java).post(HostDataEvent(1, getString(R.string.delete_successful), requireNotNull(hostData)))
                                 activity?.onBackPressed()
                             })
                 }
@@ -88,7 +90,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
 
     override fun onClick(p0: View?) {
         when (p0?.id) {
-            com.lmgy.redirect.R.id.btn_save -> if (isIP(mIpAddress?.text.toString())) {
+            R.id.btn_save -> if (isIP(mIpAddress?.text.toString())) {
                 if (mHostname?.text.toString().isNotEmpty()) {
                     hostData = HostData(true, mIpAddress?.text.toString(), mHostname?.text.toString(), mRemark?.text.toString())
                     saveOrUpdate(hostData)
@@ -104,16 +106,16 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
     }
 
     private fun initView(view: View) {
-        mIpAddress = view.findViewById(com.lmgy.redirect.R.id.ipAddress)
-        mHostname = view.findViewById(com.lmgy.redirect.R.id.hostname)
-        mRemark = view.findViewById(com.lmgy.redirect.R.id.remark)
-        mBtnSave = view.findViewById(com.lmgy.redirect.R.id.btn_save)
+        mIpAddress = view.findViewById(R.id.ipAddress)
+        mHostname = view.findViewById(R.id.hostname)
+        mRemark = view.findViewById(R.id.remark)
+        mBtnSave = view.findViewById(R.id.btn_save)
         mBtnSave?.setOnClickListener(this)
     }
 
     override fun checkStatus() {
-        menu?.findItem(com.lmgy.redirect.R.id.nav_rules)?.isChecked = true
-        toolbar?.inflateMenu(com.lmgy.redirect.R.menu.menu_select)
+        menu?.findItem(R.id.nav_rules)?.isChecked = true
+        toolbar?.inflateMenu(R.menu.menu_select)
         toolbar?.setTitle(com.lmgy.redirect.R.string.action_edit)
         toolbar?.setOnMenuItemClickListener(this)
     }
@@ -171,7 +173,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {
-                        EventBus.getDefault().post(MessageEvent(2, getString(com.lmgy.redirect.R.string.save_successful)))
+                        LiveDataBus.with(MessageEvent::class.java).post(MessageEvent(2, getString(R.string.save_successful)))
                         activity?.onBackPressed()
                     })
         } else {
@@ -181,7 +183,7 @@ class ChangeSettingFragment : BaseFragment(), View.OnClickListener, Toolbar.OnMe
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {
-                        EventBus.getDefault().post(MessageEvent(2, getString(com.lmgy.redirect.R.string.save_successful)))
+                        LiveDataBus.with(MessageEvent::class.java).post(MessageEvent(2, getString(R.string.save_successful)))
                         activity?.onBackPressed()
                     })
         }

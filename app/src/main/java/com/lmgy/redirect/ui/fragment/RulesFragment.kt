@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
@@ -16,10 +17,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
+import com.lmgy.livedatabus.LiveDataBus
 import com.lmgy.redirect.R
 import com.lmgy.redirect.adapter.HostSettingAdapter
 import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.db.data.HostData
+import com.lmgy.redirect.event.HostDataEvent
 import com.lmgy.redirect.event.MessageEvent
 import com.lmgy.redirect.listener.RecyclerItemClickListener
 import com.lmgy.redirect.viewmodel.HostViewModel
@@ -28,10 +31,6 @@ import com.lmgy.redirect.viewmodel.Injection
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
-import java.util.*
 
 /**
  * @author lmgy
@@ -55,14 +54,16 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
     private var selectedIds: MutableList<String> = ArrayList()
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        initEvent()
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         mContext = this.context ?: requireContext()
         hostViewModelFactory = Injection.provideHostViewModelFactory(requireNotNull(mContext))
         viewModel = ViewModelProvider(this, requireNotNull(hostViewModelFactory)).get(HostViewModel::class.java)
-        if (!EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().register(this)
-        }
         mView = inflater.inflate(R.layout.fragment_rules, container, false)
         initView(requireNotNull(mView))
         return mView
@@ -121,12 +122,6 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this)
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -172,17 +167,20 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
                 val copyDataList = ArrayList<HostData>(hostList)
-                hostList.removeAt(position)
-                mAdapter?.setHostDataList(hostList)
-                disposable.add(requireNotNull(viewModel).updateAll(hostList)
+                val tempData = hostList[position]
+                disposable.add(requireNotNull(viewModel).delete(hostList[position])
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe())
+                hostList.removeAt(position)
+                checkDns()
+                mAdapter?.notifyDataSetChanged()
+
                 Snackbar.make(requireNotNull(mView), getString(R.string.delete_successful), Snackbar.LENGTH_SHORT)
                         .setAction(getString(R.string.action_undo)) {
-                            mAdapter?.setHostDataList(copyDataList)
                             hostList = copyDataList
-                            disposable.add(requireNotNull(viewModel).updateAll(copyDataList)
+                            checkDns()
+                            disposable.add(requireNotNull(viewModel).insert(tempData)
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe())
@@ -225,11 +223,25 @@ class RulesFragment : BaseFragment(), Toolbar.OnMenuItemClickListener {
                 })
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun eventBus(event: MessageEvent) {
-        if (event.type == 2) {
-            mAdapter?.setHostDataList(hostList)
-        }
+    private fun initEvent() {
+        LiveDataBus.with(MessageEvent::class.java).observe(this, Observer {
+            if (it.type == 2) {
+                checkDns()
+            }
+        })
+        LiveDataBus.with(HostDataEvent::class.java).observe(this, Observer {
+            val data = it.hostData
+            Snackbar.make(requireNotNull(mView), it.message, Snackbar.LENGTH_SHORT)
+                    .setAction(getString(R.string.action_undo)) {
+                        disposable.add(requireNotNull(viewModel).insert(data)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe {
+                                    initData()
+                                })
+                    }
+                    .show()
+        })
     }
 
     private fun initView(view: View) {

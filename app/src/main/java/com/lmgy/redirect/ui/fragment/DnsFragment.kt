@@ -11,6 +11,7 @@ import android.widget.Spinner
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
+import com.lmgy.livedatabus.LiveDataBus
 import com.lmgy.redirect.R
 import com.lmgy.redirect.base.BaseFragment
 import com.lmgy.redirect.db.data.DnsData
@@ -22,7 +23,6 @@ import com.lmgy.redirect.viewmodel.Injection
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import org.greenrobot.eventbus.EventBus
 
 /**
  * @author lmgy
@@ -94,7 +94,7 @@ class DnsFragment : BaseFragment() {
             val tempIpv4 = (ipv4?.text?.toString() ?: "").trim()
             val tempIpv6 = (ipv6?.text?.toString() ?: "").trim()
             if (tempIpv4.isEmpty() || tempIpv6.isEmpty()) {
-                EventBus.getDefault().post(MessageEvent(1, getString(R.string.empty)))
+                LiveDataBus.with(MessageEvent::class.java).post(MessageEvent(1, getString(R.string.empty)))
             } else {
                 if (dnsList.isEmpty()) {
                     disposable.add(requireNotNull(viewModel).insertDns(DnsData(position, tempIpv4, tempIpv6))
@@ -126,9 +126,9 @@ class DnsFragment : BaseFragment() {
 
     private fun goBack() {
         if (LocalVpnService.isRunning()) {
-            EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful_restart)))
+            LiveDataBus.with(MessageEvent::class.java).post(MessageEvent(1, getString(R.string.save_successful_restart)))
         } else {
-            EventBus.getDefault().post(MessageEvent(1, getString(R.string.save_successful)))
+            LiveDataBus.with(MessageEvent::class.java).post(MessageEvent(1, getString(R.string.save_successful)))
         }
         Navigation.findNavController(requireNotNull(mView)).popBackStack()
     }
