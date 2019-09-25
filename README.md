@@ -20,6 +20,10 @@ For android devices, No root required, redirection is implemented through vpn, w
       src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
       height="80">](https://play.google.com/store/apps/details?id=com.lmgy.redirect)
 
+<img src="https://sm.ms/image/MhZqKNzr5HFgdBE" width="280"/> <img src="https://sm.ms/image/hXQcSoxf7FrAwGD" width="280"/> <img src="https://sm.ms/image/gm9tOIy7Dzvc3uL" width="280"/>
+
+<img src="https://sm.ms/image/ZcovzyDPsnhBwMm" width="280"/> <img src="https://sm.ms/image/xK5UNfOZqQ9YDd4" width="280"/>
+
 ## Supports
 
 * support wildcard DNS records.
