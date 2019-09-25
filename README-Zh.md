@@ -20,6 +20,10 @@
       src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png'
       height="80">](https://play.google.com/store/apps/details?id=com.lmgy.redirect)
 
+<img src="screenshots/0.jpg" width="280"/>  <img src="screenshots/1.jpg" width="280"/>  <img src="screenshots/2.jpg" width="280"/>
+
+<img src="screenshots/3.jpg" width="280"/>  <img src="screenshots/4.jpg" width="280"/>
+
 ## 功能
 
 * 支持dns泛解析
