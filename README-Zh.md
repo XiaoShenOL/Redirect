@@ -1,6 +1,7 @@
 # Redirect
 
 [![API](https://img.shields.io/badge/API-19%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=19)
+![CircleCI](https://img.shields.io/circleci/build/github/lmgy/Redirect)
 ![GitHub release](https://img.shields.io/github/release/lmgy/Redirect)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbe1ad1b9bb34f05b119c1e39e0ef070)](https://www.codacy.com/app/lmgy/Redirect?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=lmgy/Redirect&amp;utm_campaign=Badge_Grade)
 ![GitHub](https://img.shields.io/github/license/lmgy/Redirect)
